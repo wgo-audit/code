@@ -1,0 +1,4 @@
+interface:
+  display_name: "Whats.Going.On."
+  short_description: "Evidence-led startup and SMB product audits"
+  default_prompt: "Use $wgo to run wgo:onboard for this project."

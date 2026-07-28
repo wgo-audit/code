@@ -1,0 +1,40 @@
+{
+  "name": "wgo",
+  "version": "0.2.0+codex.20260713225459",
+  "description": "Evidence-led startup and SMB audits with decision-grade reports, detailed control artifacts, and optional draft operator aids.",
+  "author": {
+    "name": "Patrick Drolet",
+    "email": "patrick@drolet.name",
+    "url": "https://github.com/PatD42"
+  },
+  "homepage": "https://github.com/PatD42/whats-going-on",
+  "repository": "https://github.com/PatD42/whats-going-on",
+  "license": "MIT",
+  "keywords": [
+    "audit",
+    "startup",
+    "smb",
+    "due-diligence",
+    "repo-analysis"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Whats.Going.On.",
+    "shortDescription": "Evidence-led audits and detailed control artifacts.",
+    "longDescription": "Whats.Going.On. guides startup and SMB auditors from a plain-language business concern through approved evidence lenses, traceable controls, reconciliation, decision-grade reports, conditional detailed control artifacts, and\u2014only after explicit approval\u2014clearly untested, source-linked operator aids.",
+    "developerName": "Patrick Drolet",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/PatD42/whats-going-on",
+    "defaultPrompt": [
+      "Run wgo:onboard.",
+      "Run wgo:audit product-value.",
+      "Run wgo:summarize.",
+      "Run wgo:operationalize after an approved transition-control synthesis."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

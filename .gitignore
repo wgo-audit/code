@@ -1,0 +1,14 @@
+.DS_Store
+
+# Local Scope plugin and generated helper files
+plugins/
+.claude/
+.scope/
+
+# Temporary audit/debug artifacts
+tmp_debug/
+.coverage
+
+# Python test/runtime bytecode
+__pycache__/
+*.py[cod]
