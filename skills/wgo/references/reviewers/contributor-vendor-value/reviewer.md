@@ -2,6 +2,7 @@
 id: contributor-vendor-value
 name: Contributor and Vendor Value
 summary: What usable output, ownership, knowledge, handoff, and cost-relative value did people or vendors provide?
+version: 0.1
 codegraph: none
 depends_on:
   - product-value

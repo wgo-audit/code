@@ -2,6 +2,7 @@
 id: code-quality
 name: Code Quality
 summary: Which code-level risks materially affect correctness, delivery, maintainability, security, or product promises?
+version: 0.1
 codegraph: required
 depends_on:
   - architecture

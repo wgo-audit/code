@@ -2,6 +2,7 @@
 id: security-privacy
 name: Security and Privacy
 summary: What material identity, credential, exposure, privacy, PII, and operating-control risks are evidenced?
+version: 0.1
 codegraph: optional
 depends_on:
   - architecture

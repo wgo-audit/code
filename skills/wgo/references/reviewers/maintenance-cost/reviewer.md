@@ -2,6 +2,7 @@
 id: maintenance-cost
 name: Maintenance Cost
 summary: What skill mix, effort, operating burden, and change risk will a small replacement team face?
+version: 0.1
 codegraph: optional
 depends_on:
   - architecture

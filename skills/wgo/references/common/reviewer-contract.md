@@ -34,6 +34,7 @@ installer never replaces that external root.
 id: stable-kebab-id
 name: Reader-facing name
 summary: One assessment question
+version: 0.1
 codegraph: none | optional | required
 depends_on:
   - core-reviewer-id
@@ -41,14 +42,14 @@ supersedes: core-reviewer-id
 ---
 ```
 
-`id`, `name`, `summary`, and `codegraph` are always required. `depends_on` is
-required whenever the reviewer has a prerequisite reviewer; omit it only when
-there is no dependency. Dependencies name core reviewer IDs and mean both
-required input and execution order. Recommended inputs may name shared evidence
-and completed `depends_on` handoffs only. A same-wave or later reviewer is a
-downstream route, never an input. `supersedes` is
-allowed only on an external reviewer and names at most one core reviewer; omit
-it for an additional perspective.
+`id`, `name`, `summary`, `version`, and `codegraph` are always required.
+`version` identifies the reviewer definition version and starts at `0.1`.
+`depends_on` is required whenever the reviewer has a prerequisite reviewer;
+omit it only when there is no dependency. Dependencies name core reviewer IDs
+and mean both required input and execution order. Recommended inputs may name
+shared evidence and completed `depends_on` handoffs only. A same-wave or later reviewer
+is a downstream route, never an input. `supersedes` is allowed only on an external
+reviewer and names at most one core reviewer; omit it for an additional perspective.
 
 IDs must be unique across discovered packages. A package is unavailable when
 its metadata is malformed, a dependency is unknown, it creates a cycle, or its

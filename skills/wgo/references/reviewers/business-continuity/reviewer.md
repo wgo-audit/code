@@ -2,6 +2,7 @@
 id: business-continuity
 name: Business Continuity
 summary: Can the company demo, deploy, operate, recover, and transfer control if a person, vendor, account, or environment disappears?
+version: 0.1
 codegraph: optional
 depends_on:
   - architecture

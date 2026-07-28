@@ -2,6 +2,7 @@
 id: scalability
 name: Scalability
 summary: Does the product support its realistic business growth envelope across workload, data, operations, third parties, and cost?
+version: 0.1
 codegraph: optional
 depends_on:
   - architecture
