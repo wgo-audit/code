@@ -2,6 +2,7 @@
 id: revenue-risk
 name: Revenue Risk
 summary: What could interrupt demos, sales, pilots, onboarding, renewals, expansion, trust, or customer delivery?
+version: 0.1
 codegraph: none
 depends_on:
   - product-value

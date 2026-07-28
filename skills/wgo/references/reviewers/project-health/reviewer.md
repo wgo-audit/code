@@ -2,6 +2,7 @@
 id: project-health
 name: Project Health
 summary: Can a small team understand, prioritize, review, accept, release, and learn from the work?
+version: 0.1
 codegraph: none
 depends_on:
   - code-quality

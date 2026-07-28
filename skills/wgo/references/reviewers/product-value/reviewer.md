@@ -2,6 +2,7 @@
 id: product-value
 name: Product Value
 summary: What customer and business value is demonstrably implemented, partial, promised, or awaiting sign-off?
+version: 0.1
 codegraph: required
 depends_on:
   - architecture

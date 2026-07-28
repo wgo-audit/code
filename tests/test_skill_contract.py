@@ -67,6 +67,7 @@ class SkillContractTests(unittest.TestCase):
         for reviewer_id, path in files.items():
             content = path.read_text(encoding="utf-8")
             self.assertRegex(content, rf"(?m)^id: {re.escape(reviewer_id)}$")
+            self.assertRegex(content, r"(?m)^version: 0\.1$")
             self.assertRegex(content, r"(?m)^codegraph: (?:none|optional|required)$")
             dependencies = set(frontmatter_dependencies(path))
             self.assertLessEqual(dependencies, EXPECTED_REVIEWERS)
@@ -759,8 +760,12 @@ class SkillContractTests(unittest.TestCase):
 
         self.assertFalse(list(REVIEWERS.glob("*.md")))
         self.assertIn("plugins/wgo-reviewers/<reviewer-id>/", contract)
-        for field in ("id:", "name:", "summary:", "codegraph:", "depends_on:", "supersedes:"):
+        for field in (
+            "id:", "name:", "summary:", "version:", "codegraph:", "depends_on:",
+            "supersedes:",
+        ):
             self.assertIn(field, contract)
+        self.assertIn("`version` identifies the reviewer definition version", normalized)
         self.assertIn(
             "`depends_on` is required whenever the reviewer has a prerequisite reviewer",
             normalized,
