@@ -8,6 +8,9 @@ skills: wgo
 
 Codex users may invoke this as `wgo:operationalize`.
 
+Resolve the newest dated audit root with
+`skills/wgo/references/common/audit-root.md`.
+
 Run the complete workflow in `skills/wgo/references/common/operationalization.md`.
 
 Hard rules:

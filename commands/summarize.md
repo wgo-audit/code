@@ -8,6 +8,9 @@ skills: wgo
 
 Codex users may invoke this as `wgo:summarize`.
 
+Resolve the newest dated audit root with
+`skills/wgo/references/common/audit-root.md`.
+
 Run `skills/wgo/references/common/synthesis.md`. Read completed
 reviewer reports, their handoffs, and linked evidence/artifacts directly.
 Reconcile before drafting and preserve source-access limits, uncertainty, and

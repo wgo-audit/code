@@ -66,7 +66,12 @@ wgo:onboard
 /wgo_onboard
 ```
 
-WGO first confirms the company, product, business concern, additional evidence, and reviewers. It audits the full current folder at detailed depth and creates `_whats-going-on/` only after the onboarding interview is approved. It then asks before running `wgo:audit all`; completed reviewers are synthesized automatically, and WGO asks before operationalization.
+For a first audit, WGO confirms the company, product, business concern,
+additional evidence, and reviewers. It creates
+`_whats-going-on-YYYYMMDD/`, dated when onboarding starts, only after approval.
+On a project with a prior audit, WGO displays the stored configuration and asks
+only whether anything needs updating. Completed reviewers are synthesized
+automatically, and WGO asks before operationalization.
 
 See [what to expect during onboarding](docs/onboarding-expectations.md) for the
 question sequence, example answers, and how each answer guides the audit.
@@ -119,7 +124,7 @@ that do not depend on each other.
 
 | Purpose | Codex | Claude |
 |---|---|---|
-| Start or resume the audit interview | `wgo:onboard` | `/wgo_onboard` |
+| Start, improve, or compare an audit | `wgo:onboard` with `[compare\|blind-compare] [YYYYMMDD]` | `/wgo_onboard` with `[compare\|blind-compare] [YYYYMMDD]` |
 | Run one reviewer or all selected reviewers | `wgo:audit [reviewer-id\|all]` | `/wgo_audit [reviewer-id\|all]` |
 | Show truthful progress and blockers | `wgo:status` | `/wgo_status` |
 | Reconcile findings and generate reports | `wgo:summarize` | `/wgo_summarize` |
@@ -159,11 +164,12 @@ Every completed audit creates a start-here index and reports for three audiences
 | `product-manager-notes.md` | Product manager | What is implemented, promised, valuable, risky to revenue, or in need of product direction? |
 | `technical-lead-notes.md` | Technical lead | What is known about implementation, operations, maintainability, security, quality, and safe evolution? |
 
-All audit artifacts live under `_whats-going-on/`. New audits begin with a brief,
-one checklist, reusable evidence ledger, source-access register, shared open
-items, reviewer reports and compact handoffs, selected reviewer-owned artifacts,
-and the four final reports. The source project and external systems remain
-read-only unless the auditor separately authorizes a change.
+All audit artifacts live under a dated `_whats-going-on-YYYYMMDD/` root. New
+audits begin with a brief, one checklist, reusable evidence ledger,
+source-access register, shared open items, reviewer reports and compact
+handoffs, selected reviewer-owned artifacts, and the four final reports. The
+source project and external systems remain read-only unless the auditor
+separately authorizes a change.
 
 ### Detailed Control Artifacts
 
@@ -231,17 +237,20 @@ boundary, WGO records the pointer as documented but unverified, explains what
 it cannot establish, and identifies the smallest useful verification or scope
 expansion. It does not quietly treat the referenced material as reviewed.
 
-## Resume Or Re-audit With Another Agent
+## Improve Or Compare An Audit
 
 WGO audit state is local, readable Markdown rather than model-specific memory.
-An auditor can begin an audit with Codex and later resume the same
-`_whats-going-on/` audit root with Claude, or the reverse.
+An auditor can begin an audit with Codex and later improve the same dated audit
+root with Claude, or the reverse. Plain `wgo:onboard` reopens the newest root
+read-write, displays its configuration, and asks whether anything needs
+updating.
 
-When onboarding finds completed reviewer work, WGO asks whether to complete
-only missing work or rerun all selected reviewers. Completing missing work
-preserves completed states. Rerunning uses prior findings as a launchpad, but
-requires every reviewer to challenge them against direct evidence before
-retaining, revising, superseding, or closing them.
+`wgo:onboard compare [YYYYMMDD]` creates today's root and performs a targeted,
+read-only comparison against the named completed baseline or the latest
+completed audit. `wgo:onboard blind-compare [YYYYMMDD]` performs a full audit
+without exposing baseline findings, then compares the completed audits. Both
+comparison modes report reviewer-version differences and, when versions differ,
+require the auditor to accept the installed versions before proceeding.
 
 The result is cumulative, but not blindly append-only:
 
@@ -253,10 +262,8 @@ The result is cumulative, but not blindly append-only:
 - genuinely new identifiers continue after the highest existing identifier in
   that audit root.
 
-The newer agent reconciles the prior evidence and may revise reports to reflect
-the current conclusion. WGO does not automatically merge an audit that was
-deleted, moved, or separately archived; the auditor may supply that audit as
-evidence when a comparison is wanted.
+An improve run may revise the current audit. Comparison modes never modify the
+baseline.
 
 ## Optional: Validate An Audit
 
@@ -264,7 +271,7 @@ The bundled validator is optional. It checks required structure, reviewer and fi
 
 ```bash
 python3 skills/wgo/scripts/validate_audit_structure.py \
-  /path/to/project/_whats-going-on \
+  /path/to/project/_whats-going-on-YYYYMMDD \
   --require-final
 ```
 
@@ -272,7 +279,7 @@ For operationalized audits, add `--require-operationalization`:
 
 ```bash
 python3 skills/wgo/scripts/validate_audit_structure.py \
-  /path/to/project/_whats-going-on \
+  /path/to/project/_whats-going-on-YYYYMMDD \
   --require-final \
   --require-operationalization
 ```

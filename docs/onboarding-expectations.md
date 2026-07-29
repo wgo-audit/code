@@ -1,20 +1,45 @@
 # What To Expect During WGO Onboarding
 
 `wgo:onboard` turns a broad concern into an audit boundary that is useful to
-the people who will act on its results. It is a short conversation, not a form:
-WGO asks one question at a time and waits for the answer before continuing.
-It reads the current project folder quietly first so it does not ask for facts
-that are already clear.
+the people who will act on its results. Every independent audit uses
+`_whats-going-on-YYYYMMDD`, dated when onboarding starts.
 
 WGO audits the complete current folder and any confirmed supporting code
 repositories at detailed transition-control depth. It does not change the
 project, deploy anything, or ask for credentials.
 
-## Questions You Will Be Asked
+## Returning To An Audited Project
 
-WGO groups source questions first: primary code, any additional code
-repositories, then supporting records. It asks the mandate and business
-questions after it knows what evidence and code can be examined.
+When a prior audit exists, WGO does not repeat standard onboarding questions.
+It displays the complete proposed configuration and asks:
+
+> Does anything in this onboarding configuration need to be updated?
+
+Answering no approves that configuration and starts audit preparation. Answering
+yes asks only for the fields that need changing, then displays the configuration
+again. The displayed configuration includes the active audit platform/model,
+scope, cutoff, sources, selected reviewer versions, dependency waves, material
+answers, known unknowns, and success criteria.
+
+Use one of three modes:
+
+| Command | Behavior |
+|---|---|
+| `wgo:onboard` | Improve the newest audit in its existing read-write root. |
+| `wgo:onboard compare [YYYYMMDD]` | Create today's audit root and reassess only findings and open items from the specified completed baseline, or the latest completed audit when the date is omitted. |
+| `wgo:onboard blind-compare [YYYYMMDD]` | Run a full audit without exposing baseline findings, then compare the two completed audits in detail. |
+
+For either comparison mode, WGO compares the baseline reviewer versions with
+the installed packages. An unavailable selected package blocks the run. WGO
+lists missing or different versions together and asks whether using the
+installed versions is acceptable. WGO does not install or retrieve a reviewer
+version.
+
+## First-Audit Questions
+
+Only a project without a reusable audit configuration receives standard
+intake. WGO asks one question at a time. It groups source questions first:
+primary code, any additional code repositories, then supporting records.
 
 | Question | Example answer | How WGO uses it |
 |---|---|---|
@@ -28,7 +53,7 @@ questions after it knows what evidence and code can be examined.
 | Harmful failure to avoid | “Accepting the handoff, then discovering production cannot be recovered.” | Sets the consequence against which risks and priorities are judged. |
 | Evidence cutoff | “Use evidence available through 2026-07-24.” | Keeps history, documents, and observations time-bounded and reproducible. |
 | Report audiences | “The founder, product lead, and incoming technical lead.” | Shapes the executive summary, product-manager notes, and technical-lead notes. |
-| Reviewers | “Add Security and Privacy; omit Expense Exposure because billing is out of scope.” | Confirms the perspectives that will run. WGO also names discovered project-local extensions as optional choices and calculates dependency waves. |
+| Reviewers | “Add Security and Privacy; omit Expense Exposure because billing is out of scope.” | Confirms the perspectives that will run. WGO records each selected reviewer's declared version, names discovered project-local extensions as optional choices, and calculates dependency waves. |
 | Success criteria | “Give the incoming maintainer a prioritized, evidence-backed list of blockers and safe next steps.” | Defines what synthesis must demonstrate before the audit is useful. If two valid outcomes would lead to different conclusions, WGO asks one focused distinction. |
 
 For the evidence-and-documentation source list, give one local folder or GitHub
@@ -107,37 +132,29 @@ adds only those approved sources, and has the same worker and model update the
 catalog and resolve the signals again. If you answer no, reviewers receive the
 remaining signals as navigation leads or evidence limits, not proof.
 
-## Resuming An Existing Audit
+## Audit Roots And Comparison
 
-When `_whats-going-on/` already exists, WGO reads it before restarting work.
-The same audit root can be resumed with Codex or Claude: unchanged open items
-and decisions retain their IDs, resolved items receive explicit dispositions,
-materially changed items receive new linked IDs, and new IDs continue after the
-highest prior ID.
+Plain onboarding improves the newest dated root read-write. An incomplete root
+keeps completed reviewer states and finishes missing work; a completed root
+reruns its selected reviewers and synthesis while preserving stable IDs.
 
-If one or more reviewers are already marked completed, WGO asks one question:
-
-> I found completed reviewer work. Should I complete only missing work
-> (idempotent), or rerun all selected reviewers using the prior findings as a
-> launchpad?
-
-`complete-missing` keeps completed reviewer states and runs only unfinished
-work. `rerun-all` preserves the prior artifacts and stable IDs, then reruns
-every selected reviewer and synthesis. Prior findings direct the new
-investigation but are not accepted as proof.
-
-This preserves audit history without duplicating findings. It does not
-automatically merge an audit that was deleted, moved, or separately archived;
-you can provide that prior audit as an evidence source when comparison is
-useful.
+Comparison modes never modify their baseline. A light comparison states that it
+did not seek unrelated findings, including in its audience reports. A blind
+comparison audits a temporary project copy that excludes every prior audit
+root; only after blind synthesis does the comparison step read both audits.
+Each comparison records the roots, cutoffs, reviewer versions actually used,
+accepted differences, and disposition of prior items. A finding is called
+introduced only when dated evidence proves that it arose after the baseline
+cutoff.
 
 ## Approval And What Happens Next
 
-Before creating the audit folder, WGO summarizes the mandate, decision,
+Before creating a first audit folder, WGO summarizes the mandate, decision,
 concerns, failure to avoid, cutoff, audiences, evidence sources, selected
-reviewers, primary/supporting code repositories, and success criteria for
-approval. After approval it creates only the audit brief, checklist, evidence
-ledger, source-access register, and open items. The onboarding lead delegates
+reviewer IDs and versions, primary/supporting code repositories, and success
+criteria for approval. After approval it creates only the audit brief,
+checklist, evidence ledger, source-access register, and open items. The
+onboarding lead delegates
 one bounded preparation worker to catalog documentation in audited repositories
 and supplied sources. Even an empty documentation corpus can produce a
 carefully qualified coverage signal. The worker classifies and converts only
@@ -146,6 +163,7 @@ scope, or select reviewers. The catalog is navigation metadata, not evidence.
 It uses the auditor's active platform and existing session only; WGO never
 needs another model provider's credentials to prepare the catalog.
 
-WGO then asks: `Should I proceed with wgo:audit all?` A yes starts the selected
-reviewers in their dependency waves. Once they all finish, WGO automatically
+For a reused configuration, answering no to the update question proceeds
+without a second start question. First-ever onboarding asks:
+`Should I proceed with wgo:audit all?` Once reviewers finish, WGO automatically
 synthesizes the results and asks before drafting any operator aids.

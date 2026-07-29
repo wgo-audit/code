@@ -7,6 +7,9 @@ Read each completed reviewer report, handoff, and linked evidence/artifacts
 directly. A reviewer run out of order remains publishable when its report states
 the specific limitation.
 
+Read the onboarding mode from the brief. In `blind-compare`, complete the full
+blind synthesis before reading or receiving any baseline path or content.
+
 Reconcile material findings, source-access limits, unknowns, duplicated advice,
 and cross-reviewer consequences. Then create:
 
@@ -17,6 +20,19 @@ and cross-reviewer consequences. Then create:
   boundaries; and
 - `technical-lead-notes.md` for traceable technical conclusions and safe
   evolution.
+
+For `compare`, also create `comparison.md` from the selected baseline items and
+current reassessment evidence using the Audit Comparison template. State
+prominently that this targeted run did not seek unrelated or newly introduced
+issues. Put the same boundary in each of the four audience reports so none is
+mistaken for a new full-audit assessment of current posture.
+
+For `blind-compare`, after the four blind reports are complete, end the blind
+phase. Only then may the coordinator read the selected baseline and create
+`comparison.md`. Reconcile findings in both directions and distinguish fixed,
+improved, unchanged, regressed, newly found, no longer evaluated, and
+unverifiable conclusions. Do not call a finding introduced unless dated
+evidence establishes that timing.
 
 Promote a reviewer finding into a synthesis insight only when it changes a
 decision, priority, sequence, claim, or stop condition. Preserve all independent

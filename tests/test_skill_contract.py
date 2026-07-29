@@ -117,7 +117,10 @@ class SkillContractTests(unittest.TestCase):
             "wgo-code-repositories/<audit-id>/<repository-name>/",
         ):
             self.assertIn(phrase, normalized_onboarding)
-        self.assertIn("Ask each intake question separately and wait for its answer", " ".join(command.split()))
+        self.assertIn(
+            "onboarding asks each intake question separately and waits for its answer",
+            " ".join(command.split()),
+        )
         self.assertIn("Evidence and documentation sources", templates)
         self.assertIn("Supporting code repositories", templates)
         self.assertLess(
@@ -138,7 +141,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Do not ask for or offer a reviewer order", onboarding)
         self.assertIn("public data and any private data available through the existing GitHub session", onboarding)
         self.assertNotIn("approved depth", onboarding)
-        self.assertIn("WGO owns shared collection and\ndependency waves", command)
+        self.assertIn("WGO owns shared collection and dependency waves", " ".join(command.split()))
 
     def test_codegraph_is_initialized_per_git_root_with_explicit_paths(self) -> None:
         onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
@@ -487,18 +490,15 @@ class SkillContractTests(unittest.TestCase):
         normalized_command = " ".join(command.split())
         onboard_command = (ROOT / "commands/onboard.md").read_text(encoding="utf-8")
 
-        self.assertIn("same audit root", onboarding)
-        self.assertIn("deleted, moved, or separately archived audit", onboarding)
+        self.assertIn("same read-write root", normalized_onboarding)
+        self.assertIn("If Synthesis is completed, record `rerun-all`", normalized_onboarding)
+        self.assertIn("otherwise record `complete-missing`", normalized_onboarding)
         self.assertIn(
-            "I found completed reviewer work. Should I complete only missing work "
-            "(idempotent), or rerun all selected reviewers using the prior findings "
-            "as a launchpad?",
+            "mark every selected reviewer and Synthesis `rerun-pending`",
             normalized_onboarding,
         )
-        self.assertIn("Do not ask this question when no reviewer is marked complete", normalized_onboarding)
-        self.assertIn("`complete-missing` or `rerun-all`", onboarding)
-        self.assertIn("mark every selected reviewer and Synthesis\n`rerun-pending`", onboarding)
-        self.assertIn("marks any reviewer completed", onboard_command)
+        self.assertIn("preserve prior artifacts and IDs", onboard_command)
+        self.assertIn("without another start question", onboard_command)
         self.assertIn("`verified-fixed`", controls)
         self.assertIn("Reviewer run disposition", controls)
         self.assertIn("use `rerun-pending` for every selected reviewer", controls)
@@ -512,6 +512,78 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("prior prose is not proof", normalized_command)
         self.assertIn("do not rewrite it; report that nothing was missing", normalized_command)
         self.assertIn("always rerun synthesis", normalized_command)
+
+    def test_dated_audit_roots_and_modes_are_routed_consistently(self) -> None:
+        roots = (SKILL / "references/common/audit-root.md").read_text(encoding="utf-8")
+        normalized_roots = " ".join(roots.split())
+        skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        onboard = (ROOT / "commands/onboard.md").read_text(encoding="utf-8")
+
+        self.assertIn("_whats-going-on-YYYYMMDD", roots)
+        self.assertIn("greatest date", roots)
+        self.assertIn("Synthesis `completed` or", roots)
+        self.assertIn("exact matching completed root", normalized_roots)
+        self.assertIn("All audit roots are excluded", roots)
+        self.assertIn("one independent audit root per day", roots)
+        self.assertIn("Legacy `_whats-going-on/`", roots)
+        self.assertIn("args: \"[compare|blind-compare] [YYYYMMDD]\"", onboard)
+        self.assertIn("wgo:onboard [compare|blind-compare] [YYYYMMDD]", skill)
+        for command_name in (
+            "audit.md", "status.md", "summarize.md", "operationalize.md",
+        ):
+            command = (ROOT / "commands" / command_name).read_text(encoding="utf-8")
+            self.assertIn("references/common/audit-root.md", command)
+
+    def test_reused_configuration_and_version_mismatch_gates(self) -> None:
+        onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
+        normalized = " ".join(onboarding.split())
+        docs = (ROOT / "docs/onboarding-expectations.md").read_text(encoding="utf-8")
+
+        self.assertIn("For all three modes when a prior brief supplies configuration", normalized)
+        self.assertIn("do not repeat standard onboarding questions", normalized)
+        self.assertIn(
+            "Does anything in this onboarding configuration need to be updated?",
+            onboarding,
+        )
+        self.assertIn("Never fall back to the standard intake", onboarding)
+        self.assertIn("without another start question", normalized)
+        self.assertIn("active audit platform/model", normalized)
+        self.assertIn("repeat package validation and the version gate", normalized)
+        self.assertIn("For `compare` and `blind-compare`", onboarding)
+        self.assertIn("An unavailable selected package is a blocker", normalized)
+        self.assertIn(
+            "The selected reviewer versions do not all match the installed packages. "
+            "Is it acceptable to continue with the installed versions?",
+            normalized,
+        )
+        self.assertIn("Do not ask this version question when all versions match", normalized)
+        self.assertIn("WGO does not install or retrieve a reviewer", docs)
+
+    def test_compare_and_blind_compare_preserve_their_evidence_boundaries(self) -> None:
+        onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
+        audit = (ROOT / "commands/audit.md").read_text(encoding="utf-8")
+        synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
+        controls = (SKILL / "references/templates/control-templates.md").read_text(encoding="utf-8")
+        normalized_onboarding = " ".join(onboarding.split())
+        normalized_synthesis = " ".join(synthesis.split())
+
+        self.assertIn("select only reviewers that own baseline findings", normalized_onboarding)
+        self.assertIn("does not seek unrelated findings", normalized_onboarding)
+        self.assertIn("temporary copy of the audited project that excludes every audit root", normalized_onboarding)
+        self.assertIn("Copy only the completed new dated audit root back", normalized_onboarding)
+        self.assertIn("only the selected read-only\nbaseline items", audit)
+        self.assertIn("do not give reviewers any baseline content", audit)
+        self.assertIn("complete the full blind synthesis before reading", normalized_synthesis)
+        self.assertIn("Reconcile findings in both directions", synthesis)
+        self.assertIn("same boundary in each of the four audience reports", normalized_synthesis)
+        self.assertIn("## Audit Comparison", controls)
+        self.assertIn("Audit platform/model and catalog platform/model", controls)
+        for disposition in (
+            "`fixed`", "`improved`", "`unchanged`", "`regressed`",
+            "`unverifiable`", "`newly-found`", "`no-longer-evaluated`",
+        ):
+            self.assertIn(disposition, controls)
+        self.assertIn("Use `introduced` only when dated evidence proves", controls)
 
     def test_auditor_questions_are_distinguished_from_evidence_gaps(self) -> None:
         onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
@@ -792,6 +864,37 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("plugins/wgo-reviewers/*/reviewer.md", onboarding)
         self.assertIn("reviewer-contract.md", skill)
 
+    def test_onboarding_records_selected_reviewer_versions(self) -> None:
+        onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
+        normalized_onboarding = " ".join(onboarding.split())
+        controls = (
+            SKILL / "references/templates/control-templates.md"
+        ).read_text(encoding="utf-8")
+        expectations = (ROOT / "docs/onboarding-expectations.md").read_text(
+            encoding="utf-8"
+        )
+        normalized_expectations = " ".join(expectations.split())
+        contract = (
+            SKILL / "references/common/reviewer-contract.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            "Require unique `id`, `name`, `summary`, `version`, and `codegraph`",
+            onboarding,
+        )
+        self.assertIn("Present each reviewer's version", onboarding)
+        self.assertIn("selected reviewer package IDs and versions", normalized_onboarding)
+        self.assertIn(
+            "reviewer's ID/version/source/absolute package path",
+            normalized_onboarding,
+        )
+        self.assertIn(
+            "Selected reviewer packages (ID, version, core/external, absolute path)",
+            controls,
+        )
+        self.assertIn("selected reviewer IDs and versions", normalized_expectations)
+        self.assertIn("change in a way that can affect results", contract)
+
     def test_public_docs_explain_cross_agent_resume_and_reviewer_extensions(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         onboarding = (
@@ -801,20 +904,23 @@ class SkillContractTests(unittest.TestCase):
         guide = guide_path.read_text(encoding="utf-8")
         normalized_guide = " ".join(guide.split())
 
-        self.assertIn("## Resume Or Re-audit With Another Agent", readme)
+        self.assertIn("## Improve Or Compare An Audit", readme)
         self.assertIn("begin an audit with Codex", readme)
         self.assertIn("not blindly append-only", readme)
-        self.assertIn("deleted, moved, or separately archived", readme)
+        self.assertIn("Comparison modes never modify the\nbaseline", readme)
         self.assertIn(
             "skills/wgo/references/common/reviewer-authoring.md",
             readme,
         )
-        self.assertIn("## Resuming An Existing Audit", onboarding)
-        self.assertIn("resumed with Codex or Claude", onboarding)
-        self.assertIn("Should I complete only missing work", onboarding)
-        self.assertIn("Prior findings direct the new\ninvestigation", onboarding)
-        self.assertIn("finds completed reviewer work", readme)
-        self.assertIn("challenge them against direct evidence", readme)
+        self.assertIn("## Returning To An Audited Project", onboarding)
+        self.assertIn("Does anything in this onboarding configuration need to be updated?", onboarding)
+        self.assertIn("## Audit Roots And Comparison", onboarding)
+        self.assertIn("temporary project copy", " ".join(onboarding.split()))
+        self.assertIn("Plain `wgo:onboard` reopens the newest root", readme)
+        self.assertIn(
+            "require the auditor to accept the installed versions",
+            " ".join(readme.split()),
+        )
 
         self.assertIn("# Building A WGO Reviewer", guide)
         self.assertIn("## Frontmatter Contract", guide)

@@ -4,9 +4,81 @@ Use for `wgo:onboard`. Onboarding agrees a bounded audit before it writes
 anything. Explain that WGO audits the current folder, reads approved sources,
 and creates evidence-backed outputs without changing the audited system.
 
+## Resolve Mode And Audit Root
+
+Parse only these forms:
+
+- no parameters: `improve`;
+- `compare [YYYYMMDD]`: targeted comparison with the named completed audit or,
+  when omitted, the latest completed audit; or
+- `blind-compare [YYYYMMDD]`: blind full audit followed by detailed comparison
+  with the named completed audit or latest completed audit.
+
+Reject extra parameters and invalid dates. Resolve roots with `audit-root.md`.
+Capture today's auditor-local date once when onboarding starts.
+
+For `improve`, select the newest dated audit root and make it the read-write
+active root. If none exists, this is a first audit: plan today's dated root and
+run Sequential Intake. If an audit exists, reuse its brief as the configuration
+and do not run Sequential Intake.
+
+For `compare`, keep the selected completed baseline read-only and plan today's
+dated root. Reuse the baseline configuration, advance the proposed evidence
+cutoff to the onboarding start time, and select only reviewers that own
+baseline findings or open items requiring reassessment. This run intentionally
+does not seek unrelated findings.
+
+For `blind-compare`, keep the selected completed baseline hidden from all audit
+reviewers and synthesis until the new audit is complete. Reuse only its
+configuration, advance the proposed evidence cutoff to the onboarding start
+time, and select the same reviewer set by default. Before evidence discovery,
+prepare a system temporary copy of the audited project that excludes every
+audit root. Run onboarding, reviewers, and synthesis there. Copy only the
+completed new dated audit root back to the original project before the separate
+comparison pass reads either audit.
+
+## Reused Configuration Gate
+
+For all three modes when a prior brief supplies configuration, do not repeat
+standard onboarding questions. Discover current reviewer packages and validate
+their metadata and dependencies. Assemble one complete proposed configuration:
+mode, active and baseline roots, baseline access, active audit platform/model,
+company/product, audiences, mandate and decision, concerns, harmful failure
+mode, detailed scope, cutoff, code repositories and refs,
+evidence/documentation sources, selected reviewer IDs and recorded versions,
+installed reviewer versions and paths, substitutions, dependency waves,
+material auditor answers, known unknowns, and success criteria.
+
+For `compare` and `blind-compare`, compare every selected baseline reviewer
+version with the currently installed package of the same resolved ID. An
+unavailable selected package is a blocker: report it and stop so the auditor
+can make the package available. A missing baseline version or different
+installed version is a mismatch. List all mismatches together with baseline and
+installed values, then ask exactly:
+
+`The selected reviewer versions do not all match the installed packages. Is it
+acceptable to continue with the installed versions?`
+
+Wait. If the auditor says no, stop so they can make the intended reviewer
+versions available; do not install, select, or retrieve versions for them. If
+yes, record the mismatch and acceptance in the new brief and use the installed
+versions. Do not ask this version question when all versions match.
+
+After any required version acceptance, show the configuration and ask exactly:
+
+`Does anything in this onboarding configuration need to be updated?`
+
+If no, treat the displayed configuration as approved and proceed with audit
+preparation without another start question. If yes, ask only for the named
+changes and validate their consequences. If reviewer selection, substitution,
+or package availability changed, repeat package validation and the version
+gate. Redisplay the complete configuration and ask the same update question
+again. Never fall back to the standard intake.
+
 ## Sequential Intake
 
-Quietly inspect the full current project folder first and identify its Git
+Use this section only for a first audit with no reusable brief. Quietly inspect
+the full current project folder, excluding all audit roots, and identify its Git
 roots. The audit is always detailed and covers the whole folder plus any
 confirmed supporting code repositories. A GitHub URL supplied for code, or a
 current repository `origin` that resolves to GitHub, permits read-only use of
@@ -14,20 +86,6 @@ its public data and any private data available through the existing GitHub
 session. Do not ask for consent to use it. Ask one question at a time and wait
 for its answer before asking the next. Do not bundle the mandate, business
 decision, concerns, and harmful failure mode.
-
-When `_whats-going-on/audit-checklist.md` exists, read it and the audit brief
-before intake and reuse confirmed answers that have not changed. If one or more
-reviewer rows have state `completed` or beginning with `completed-`, ask exactly
-one question and wait:
-
-`I found completed reviewer work. Should I complete only missing work
-(idempotent), or rerun all selected reviewers using the prior findings as a
-launchpad?`
-
-Retain the answer and, after approval, record `complete-missing` or `rerun-all`
-as the reviewer run disposition in the brief. Do not ask this question when no
-reviewer is marked complete; record `fresh` after approval. Do not infer a
-choice from the active model or platform.
 
 Ask in this order:
 
@@ -63,13 +121,13 @@ Then discover core packages under this skill at
 `references/reviewers/*/reviewer.md` and external packages relative to the
 audited project at `plugins/wgo-reviewers/*/reviewer.md`; do not use a separate
 reviewer registry.
-Require unique `id`, `name`, `summary`, and `codegraph` frontmatter. Require
-`depends_on` whenever another reviewer is a prerequisite; allow external
-`supersedes`. Treat malformed metadata, unknown dependencies, or a cycle as
-unavailable and state why. Present the core reviewers WGO recommends, any it
-will not run with a reason, and every external reviewer as an optional
-addition. Name any proposed core substitution. External reviewers and
-substitutions always require auditor approval.
+Require unique `id`, `name`, `summary`, `version`, and `codegraph` frontmatter.
+Require `depends_on` whenever another reviewer is a prerequisite; allow
+external `supersedes`. Treat malformed metadata, unknown dependencies, or a
+cycle as unavailable and state why. Present each reviewer's version with the
+core reviewers WGO recommends, any it will not run with a reason, and every
+external reviewer as an optional addition. Name any proposed core substitution.
+External reviewers and substitutions always require auditor approval.
 
 For an approved external reviewer, run its platform `validate_install` by
 absolute path when present. No validator means no installation is needed. A
@@ -90,34 +148,39 @@ clarification questions.
 
 ## Approval Gate
 
-Summarize the answers and obtain approval for the mandate, business decision,
-concerns, harmful failure mode, cutoff, audiences, evidence and documentation
-sources, primary/supporting code repositories, selected reviewer packages and
-substitutions, and success criteria. State the fixed defaults: detailed
-full-folder review, available shared collectors, read-only public and
-existing-session GitHub access, and coordinator-owned dependency waves.
+For a first audit, summarize the answers and obtain approval for the mandate,
+business decision, concerns, harmful failure mode, cutoff, audiences, evidence
+and documentation sources, primary/supporting code repositories, selected
+reviewer package IDs and versions, substitutions, and success criteria. State
+the fixed defaults: detailed full-folder review, available shared collectors,
+read-only public and existing-session GitHub access, and coordinator-owned
+dependency waves. A reused configuration is approved only through the Reused
+Configuration Gate.
 
-Do not create `_whats-going-on/` before approval unless the auditor expressly
-asks for provisional drafts. Mark every provisional assumption. Never silently
-include an unrelated repository, reviewer, source, or state-changing action.
+Do not create the target dated root before configuration approval unless the
+auditor expressly asks for provisional drafts. Mark every provisional
+assumption. Never silently include an unrelated repository, reviewer, source,
+audit root, or state-changing action.
 
-If `_whats-going-on/` exists, read it first. Preserve useful evidence and
-artifacts. On a resume in the same audit root, treat its open-items table and
-decision inventories/registers as the canonical re-run baseline. Do not reuse
-their IDs for a different item or decision, and do not automatically compare a
-deleted, moved, or separately archived audit; the auditor may explicitly supply
-one as evidence. Write the lean layout only when the auditor explicitly chooses
-to resume under this workflow; do not build a migration engine.
+For `improve`, preserve useful evidence, artifacts, and IDs in the same
+read-write root. If Synthesis is completed, record `rerun-all` and mark every
+selected reviewer and Synthesis `rerun-pending`; otherwise record
+`complete-missing` and retain completed reviewer states. A rerunning reviewer
+must challenge prior conclusions against direct evidence, not treat them as
+approved facts.
 
-For `complete-missing`, retain completed reviewer states and run only missing
-work. For `rerun-all`, retain prior reports, handoffs, evidence, controls, and
-IDs as the launchpad; after approval mark every selected reviewer and Synthesis
-`rerun-pending`. A rerunning reviewer must challenge prior conclusions against
-direct evidence, not treat them as approved facts.
+For `compare`, create a fresh root with disposition `fresh`, a Comparison
+checklist row, and only the selected targeted reviewers. Copy no baseline
+artifact into the new root; link exact read-only baseline items and evidence
+from the brief. For `blind-compare`, create a fresh root with disposition
+`fresh`, a Comparison row, and the approved full reviewer set in the isolated
+project copy. During the blind phase, record the baseline as `hidden` without
+its path or content. Add the baseline path only when synthesis is complete and
+the comparison phase begins.
 
 ## Create The Lean Start
 
-After approval, create only:
+For a new dated root, create only:
 
 ```text
 audit-brief.md
@@ -127,11 +190,14 @@ evidence/source-access-register.md
 controls/open-items.md
 ```
 
-Use the selected templates. `audit-brief.md` contains context, mandate, cutoff,
-full-folder detailed standard, primary/supporting code repositories, evidence
-and documentation sources, automatic GitHub repository sources, each selected
-reviewer's ID/source/absolute package path, substitutions, resolved dependency
-waves, reviewer run disposition, material auditor answers, and major unknowns.
+Use the selected templates. `audit-brief.md` contains onboarding date, mode,
+active root, baseline and access boundary, active audit platform/model, catalog
+platform/model, reviewer-version comparison and acceptance, context, mandate,
+cutoff, full-folder detailed standard, primary/supporting code repositories,
+evidence and documentation sources, automatic GitHub repository sources, each
+selected reviewer's ID/version/source/absolute package path, substitutions,
+resolved dependency waves, reviewer run disposition, material auditor answers,
+and major unknowns.
 The checklist has one task entry per selected reviewer with state, next action,
 recommended next reviewer, and factual closeout condition.
 The ledger records reusable evidence; source access records only material access
@@ -211,7 +277,8 @@ with the auditor; create a packet later when a selected reviewer needs it.
 ## Closeout
 
 Summarize the boundary, evidence limits, reviewers, dependency waves, and
-success criteria. After the lean start, documentation preparation, and any
-auditor-approved catalog additions are complete, ask exactly:
-`Should I proceed with wgo:audit all?` Do not start reviewers until the auditor
-answers yes.
+success criteria. After a reused configuration is approved, the lean start or
+same-root update, documentation preparation, and any auditor-approved catalog
+additions are complete, proceed directly with `wgo:audit all`. For a first
+audit only, ask exactly: `Should I proceed with wgo:audit all?` Do not start
+reviewers until the auditor answers yes.

@@ -10,6 +10,10 @@ generated reports at synthesis when requested.
 
 | Field | Confirmed value |
 |---|---|
+| Onboarding start date, mode, and audit root | |
+| Baseline audit root and access (`none`, `read-only`, or `hidden`) | |
+| Audit platform/model and catalog platform/model | |
+| Reviewer-version comparison and auditor acceptance | |
 | Company and product | |
 | Audience and business context | |
 | Mandate and decision enabled | |
@@ -20,7 +24,7 @@ generated reports at synthesis when requested.
 | Automatic GitHub code repository sources | |
 | Evidence and documentation sources (local folders or GitHub URL/ref) | |
 | Source limits | |
-| Selected reviewer packages (ID, core/external, absolute path) | |
+| Selected reviewer packages (ID, version, core/external, absolute path) | |
 | Approved substitutions and resolved dependency waves | |
 | Reviewer run disposition (`fresh`, `complete-missing`, or `rerun-all`) | |
 | Material auditor answers and success boundaries | |
@@ -42,6 +46,9 @@ generated reports at synthesis when requested.
 
 On a `rerun-all`, use `rerun-pending` for every selected reviewer and
 Synthesis. Do not delete their prior artifacts.
+For `compare` and `blind-compare`, add a `Comparison` row. It completes only
+after `comparison.md` identifies both audit roots, their cutoffs, reviewer
+versions actually used, and the mode-appropriate dispositions.
 `State` is exactly `confirmed`, `not-started`, `in-progress`, `rerun-pending`,
 `completed`, `completed-with-open-verification`, or `blocked`.
 
@@ -102,3 +109,29 @@ or `out-of-current-scope`. Preserve the ID on a re-run; a materially changed
 item gets a new ID and links to the superseded item. New IDs continue after the
 highest prior ID in this audit root.
 An observed ADR/PDR must not be represented as an open item.
+
+## Audit Comparison
+
+```markdown
+# Audit Comparison
+
+| Field | Value |
+|---|---|
+| Mode | compare or blind-compare |
+| Baseline audit root and cutoff | |
+| Current audit root and cutoff | |
+| Baseline reviewer versions | |
+| Current reviewer versions | |
+| Accepted version differences | |
+| Comparison boundary | |
+
+| Prior item or finding | Current evidence | Disposition | Explanation and limits |
+|---|---|---|---|
+```
+
+For `compare`, disposition is exactly `fixed`, `improved`, `unchanged`,
+`regressed`, or `unverifiable`; assess only baseline items and state that the
+run did not seek unrelated findings. For `blind-compare`, reconcile both
+completed audits after blind synthesis and may additionally use `newly-found`
+or `no-longer-evaluated`. Use `introduced` only when dated evidence proves the
+issue arose after the baseline cutoff.
