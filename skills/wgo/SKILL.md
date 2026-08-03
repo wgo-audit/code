@@ -11,7 +11,8 @@ source-backed artifacts; do not make the auditor administer a process model.
 
 ## Commands
 
-- `wgo:onboard`: agree the mandate, evidence boundary, reviewers, and success criteria.
+- `wgo:onboard [compare|blind-compare] [YYYYMMDD]`: start or improve an audit,
+  run a light comparison, or run a blind audit followed by comparison.
 - `wgo:audit [reviewer-id|all]`: run one selected reviewer, or `all`/no
   parameter runs every selected reviewer in coordinator-defined dependency waves
   and then synthesis.
@@ -61,6 +62,8 @@ source-backed artifacts; do not make the auditor administer a process model.
 Read each selected file completely, and begin evidence inspection before
 reading an output template that has not been selected.
 
+- Every command: resolve the active dated audit root with
+  `references/common/audit-root.md`.
 - Onboarding: `references/common/onboarding.md`,
   `references/common/evidence-rules.md`, and
   `references/templates/control-templates.md`. Delegate exactly one
@@ -98,7 +101,7 @@ reading an output template that has not been selected.
 ## New-Audit Layout
 
 ```text
-_whats-going-on/
+_whats-going-on-YYYYMMDD/
   audit-brief.md
   audit-checklist.md
   documentation/
@@ -122,6 +125,7 @@ _whats-going-on/
   executive-summary.md
   product-manager-notes.md
   technical-lead-notes.md
+  comparison.md              # compare and blind-compare only
 ```
 
 Existing audits may retain an earlier `final/` directory. Move it only when the

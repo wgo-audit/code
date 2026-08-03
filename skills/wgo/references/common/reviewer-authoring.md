@@ -101,7 +101,7 @@ supersedes: security-privacy
 | `id` | Always required | Stable, unique, kebab-case package identity. It should match the package folder. |
 | `name` | Always required | Reader-facing reviewer name. |
 | `summary` | Always required | One assessment question that explains the reviewer's distinct value. |
-| `version` | Always required | Reviewer definition version. Start at `0.1`. |
+| `version` | Always required | Reviewer definition version. Start at `0.1`; increment it when a change can affect results. |
 | `codegraph` | Always required | `required`, `optional`, or `none`; CodeGraph is only for code topology. |
 | `depends_on` | Required only when prerequisites exist | Core reviewer IDs whose completed handoffs are required before this reviewer can run. Omit the field when there is no prerequisite. |
 | `supersedes` | External reviewers only; optional | At most one core reviewer that this package can replace with explicit auditor approval. |

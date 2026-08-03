@@ -8,11 +8,12 @@ skills: wgo
 
 Codex users may invoke this as `wgo:status`.
 
-Read, without modifying:
+Resolve the newest dated audit root with
+`skills/wgo/references/common/audit-root.md`. Read, without modifying:
 
-- `_whats-going-on/audit-checklist.md`
-- `_whats-going-on/controls/open-items.md`
-- `_whats-going-on/evidence/source-access-register.md`
+- `<audit-root>/audit-checklist.md`
+- `<audit-root>/controls/open-items.md`
+- `<audit-root>/evidence/source-access-register.md`
 - relevant completed reviewer reports when their closeout is unclear
 
 Report each selected reviewer's state, factual completion condition, next action,

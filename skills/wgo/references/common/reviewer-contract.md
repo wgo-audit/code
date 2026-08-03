@@ -44,6 +44,8 @@ supersedes: core-reviewer-id
 
 `id`, `name`, `summary`, `version`, and `codegraph` are always required.
 `version` identifies the reviewer definition version and starts at `0.1`.
+Increment it whenever reviewer instructions, dependencies, workers, outputs,
+evidence rules, or completion criteria change in a way that can affect results.
 `depends_on` is required whenever the reviewer has a prerequisite reviewer;
 omit it only when there is no dependency. Dependencies name core reviewer IDs
 and mean both required input and execution order. Recommended inputs may name

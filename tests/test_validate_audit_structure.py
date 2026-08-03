@@ -21,7 +21,7 @@ SPEC.loader.exec_module(validator)
 class ValidateAuditStructureTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp.name) / "_whats-going-on"
+        self.root = Path(self.temp.name) / "_whats-going-on-20260712"
         self.root.mkdir()
         self.write("audit-brief.md")
         self.write(

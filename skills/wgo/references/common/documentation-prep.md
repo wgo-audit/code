@@ -34,11 +34,11 @@ document, record the limit and continue.
 Write one durable navigation artifact:
 
 ```text
-_whats-going-on/documentation/catalog.md
+<audit-root>/documentation/catalog.md
 ```
 
 Use a system temporary cache such as `<temp>/wgo-document-cache/<audit-id>/` for
-converted text. Never put converted document bodies under `_whats-going-on/`.
+converted text. Never put converted document bodies under an audit root.
 The cache may be recreated from the approved source when an audit resumes.
 
 ## Two Passes, One Worker

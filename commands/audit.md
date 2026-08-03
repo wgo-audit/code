@@ -10,6 +10,9 @@ skills: wgo
 Codex users may invoke this as `wgo:audit <reviewer-id>`, `wgo:audit all`, or
 `wgo:audit`.
 
+Resolve the newest dated audit root with
+`skills/wgo/references/common/audit-root.md`. Read and write only that root.
+
 ## One Reviewer
 
 With `<reviewer-id>`, confirm that reviewer is selected in `audit-brief.md`,
@@ -86,6 +89,12 @@ wave. Once all selected reviewers are complete, automatically run
 the existing synthesis already covers the unchanged selected reviewer set, do
 not rewrite it; report that nothing was missing. Under `rerun-all`, always rerun
 synthesis after the reviewer waves.
+
+For onboarding mode `compare`, give reviewers only the selected read-only
+baseline items, their exact prior evidence links, and current evidence needed
+to reassess them. They do not search for unrelated new findings. For
+`blind-compare`, do not give reviewers any baseline content or prior
+identifiers.
 
 Do not mark work complete merely because a report exists. A bounded,
 completed-with-open-verification conclusion is valid when its limits are clear.
