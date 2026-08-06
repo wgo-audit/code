@@ -67,7 +67,7 @@ class SkillContractTests(unittest.TestCase):
         for reviewer_id, path in files.items():
             content = path.read_text(encoding="utf-8")
             self.assertRegex(content, rf"(?m)^id: {re.escape(reviewer_id)}$")
-            self.assertRegex(content, r"(?m)^version: 0\.1$")
+            self.assertRegex(content, r"(?m)^version: 0\.2$")
             self.assertRegex(content, r"(?m)^codegraph: (?:none|optional|required)$")
             dependencies = set(frontmatter_dependencies(path))
             self.assertLessEqual(dependencies, EXPECTED_REVIEWERS)
@@ -645,7 +645,7 @@ class SkillContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         code_quality = reviewer_card("code-quality").read_text(encoding="utf-8")
         security = reviewer_card("security-privacy").read_text(encoding="utf-8")
-        identity = (REVIEWERS / "security-privacy/workers/identity-secrets-data-boundaries.md").read_text(encoding="utf-8")
+        assurance = (REVIEWERS / "security-privacy/workers/vulnerability-supply-chain.md").read_text(encoding="utf-8")
 
         self.assertIn("Documented outside audited scope; not independently\n   verified.", evidence)
         self.assertIn("smallest useful\nscope expansion", workflow)
@@ -659,7 +659,47 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("runtime-build-surfaces.md", code_quality)
         self.assertIn("public security, privacy, and disclosure claims", security)
         self.assertIn("abuse or\nmisuse controls", security)
-        self.assertIn("trust material to its consumer validation", identity)
+        self.assertIn("consumer verifier", assurance)
+
+    def test_lean_feedback_improvements_are_explicit_and_bounded(self) -> None:
+        workflow = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
+        quality = (SKILL / "references/common/artifact-quality-review.md").read_text(encoding="utf-8")
+        reports = (
+            SKILL / "references/templates/reviewer-report-template.md"
+        ).read_text(encoding="utf-8")
+        code_quality = reviewer_card("code-quality").read_text(encoding="utf-8")
+        security = reviewer_card("security-privacy").read_text(encoding="utf-8")
+        project_health = reviewer_card("project-health").read_text(encoding="utf-8")
+        security_worker = (
+            REVIEWERS / "security-privacy/workers/vulnerability-supply-chain.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("| Finding | Severity | Effort | Evidence links", reports)
+        for phrase in (
+            "consequence-based severity",
+            "smallest credible corrective effort",
+            "open-item priority remains urgency",
+        ):
+            self.assertIn(phrase, workflow)
+        self.assertIn("severity and effort classification", quality)
+
+        for state in ("`measured`", "`declined`", "`blocked`"):
+            self.assertIn(state, code_quality)
+        for state in ("`production-generated`", "`independently-built`", "`unknown`"):
+            self.assertIn(state, code_quality)
+
+        self.assertIn("vulnerability-supply-chain.md", security)
+        self.assertIn("topology-selected vulnerability-class coverage", security)
+        self.assertLessEqual(len(security_worker.splitlines()), 25)
+        self.assertIn("do not write audit artifacts", security_worker)
+        self.assertIn("do not invoke CodeGraph", security_worker)
+        self.assertIn("OpenSSF Scorecard, OSV-Scanner, or gitleaks", security_worker)
+        self.assertIn("never install tools or modify the project", security_worker)
+        self.assertIn("distinguish `not-run` from no finding", security_worker)
+        self.assertIn("route each conflict to the reviewer owning its", project_health)
+
+        for reviewer_id in EXPECTED_REVIEWERS:
+            self.assertIn("version: 0.2", reviewer_card(reviewer_id).read_text(encoding="utf-8"))
 
     def test_structural_validation_is_optional(self) -> None:
         workflow = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
@@ -730,7 +770,7 @@ class SkillContractTests(unittest.TestCase):
             "architecture": 3,
             "code-quality": 4,
             "product-value": 5,
-            "security-privacy": 2,
+            "security-privacy": 3,
             "business-continuity": 2,
             "scalability": 2,
             "contributor-vendor-value": 1,

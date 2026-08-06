@@ -2,7 +2,7 @@
 id: security-privacy
 name: Security and Privacy
 summary: What material identity, credential, exposure, privacy, PII, and operating-control risks are evidenced?
-version: 0.1
+version: 0.2
 codegraph: optional
 depends_on:
   - architecture
@@ -51,11 +51,13 @@ writes artifacts; collectors never call CodeGraph or shared collectors.
 |---|---|---|
 | Identity, secrets, and privacy boundaries | Authn/authz, service identity, secret consumers/metadata, PII/data boundaries, and lifecycle controls | `workers/identity-secrets-data-boundaries.md` |
 | Edge and runtime exposure | Ingress, DNS/TLS/WAF declarations, network paths, admin/public routes, and runtime exposure configuration | `workers/edge-runtime-exposure.md` |
+| Vulnerability and supply-chain coverage | Topology-selected vulnerability classes, dependency/provenance evidence, trust-anchor consumption, and authorized security-tool results | `workers/vulnerability-supply-chain.md` |
 
 ## Completion Criteria
 
-State material exposed surfaces, evidence limits, selected controls, and closure
-routes without secret values or unbounded claims.
+State material exposed surfaces, topology-selected vulnerability-class coverage,
+trust-anchor verifier paths, security-tool execution or limitation, selected
+controls, and closure routes without secret values or unbounded claims.
 
 ## Escalation Conditions
 

@@ -102,6 +102,14 @@ Do not create an insight to fill a count. Combine facts that change the same
 decision; retain every independent material decision rather than imposing a
 maximum.
 
+Classify every report finding by consequence-based severity (`High`, `Medium`,
+or `Low`) and smallest credible corrective effort (`S`, `M`, or `L`). Use the
+confidence/limitation column to bound either classification. Severity is impact,
+effort is size, and open-item priority remains urgency within its next-move lane.
+`High` can materially block or harm the mandate outcome; `Medium` materially
+degrades it; `Low` is bounded and non-blocking. `S` is localized, `M` crosses
+components or needs coordinated validation, and `L` spans major surfaces or owners.
+
 For a material open item, use its existing `Type` as the next-move lane:
 `decision-needed` means decision now, `verification` means evidence needed, and
 `action` means implementation correction. Use `risk` only when no responsible

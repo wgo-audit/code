@@ -2,7 +2,7 @@
 id: expense-exposure
 name: Expense Exposure
 summary: What actual or potential cash exposure comes from infrastructure, software, staffing, commitments, and failure modes?
-version: 0.1
+version: 0.2
 codegraph: none
 depends_on:
   - architecture

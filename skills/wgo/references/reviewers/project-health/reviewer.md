@@ -2,7 +2,7 @@
 id: project-health
 name: Project Health
 summary: Can a small team understand, prioritize, review, accept, release, and learn from the work?
-version: 0.1
+version: 0.2
 codegraph: none
 depends_on:
   - code-quality
@@ -44,7 +44,9 @@ and Contributor/Vendor Value. Do not infer a healthy cadence from a few commits.
 ## Completion Criteria
 
 State the evidence-bounded delivery position, material gaps, and selected
-outputs.
+outputs. When documentation is material, state its audience/task coverage,
+currency, and conflicts; route each conflict to the reviewer owning its
+consequence.
 
 ## Escalation Conditions
 

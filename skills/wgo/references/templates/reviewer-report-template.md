@@ -16,8 +16,8 @@ State what was examined and only material gaps. Link an open item or source-acce
 
 ## Key Findings
 
-| Finding | Evidence links | Confidence and limitation | Consequence |
-|---|---|---|---|
+| Finding | Severity | Effort | Evidence links | Confidence and limitation | Consequence |
+|---|---|---|---|---|---|
 
 ## Mandate-Relevant Strengths
 
