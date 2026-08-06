@@ -3,15 +3,18 @@ name: audit
 description: Run one selected Whats.Going.On. reviewer, or all selected reviewers in dependency waves.
 args: "[reviewer-id|all]"
 skills: wgo
+argument-hint: "[reviewer-id|all]"
+disable-model-invocation: true
 ---
 
 # /audit
 
-Codex users may invoke this as `wgo:audit <reviewer-id>`, `wgo:audit all`, or
-`wgo:audit`.
+Invoke this as `wgo:audit <reviewer-id>`/`wgo:audit all` in Codex,
+`/wgo:audit <reviewer-id>`/`/wgo:audit all` in Claude, or
+`/wgo-audit <reviewer-id>`/`/wgo-audit all` in OpenCode.
 
-Resolve the newest dated audit root with
-`skills/wgo/references/common/audit-root.md`. Read and write only that root.
+Load and use the WGO skill. Resolve the newest dated audit root with its
+`references/common/audit-root.md`. Read and write only that root.
 
 ## One Reviewer
 

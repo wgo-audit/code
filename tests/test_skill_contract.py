@@ -905,7 +905,7 @@ class SkillContractTests(unittest.TestCase):
         normalized_guide = " ".join(guide.split())
 
         self.assertIn("## Improve Or Compare An Audit", readme)
-        self.assertIn("begin an audit with Codex", readme)
+        self.assertIn("begin an audit with Codex, Claude, or OpenCode", readme)
         self.assertIn("not blindly append-only", readme)
         self.assertIn("Comparison modes never modify the\nbaseline", readme)
         self.assertIn(
@@ -916,7 +916,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Does anything in this onboarding configuration need to be updated?", onboarding)
         self.assertIn("## Audit Roots And Comparison", onboarding)
         self.assertIn("temporary project copy", " ".join(onboarding.split()))
-        self.assertIn("Plain `wgo:onboard` reopens the newest root", readme)
+        self.assertIn("provider's\nplain onboarding command reopens the newest root", readme)
         self.assertIn(
             "require the auditor to accept the installed versions",
             " ".join(readme.split()),

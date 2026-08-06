@@ -2,14 +2,16 @@
 name: status
 description: Show truthful Whats.Going.On. audit progress, blockers, and material open items.
 skills: wgo
+disable-model-invocation: true
 ---
 
 # /status
 
-Codex users may invoke this as `wgo:status`.
+Invoke this as `wgo:status` in Codex, `/wgo:status` in Claude, or
+`/wgo-status` in OpenCode.
 
-Resolve the newest dated audit root with
-`skills/wgo/references/common/audit-root.md`. Read, without modifying:
+Load and use the WGO skill. Resolve the newest dated audit root with its
+`references/common/audit-root.md`. Read, without modifying:
 
 - `<audit-root>/audit-checklist.md`
 - `<audit-root>/controls/open-items.md`

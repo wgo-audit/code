@@ -10,8 +10,11 @@ if "%~1"=="" (
 
 set "PLUGIN_NAME=wgo"
 set "CODEX_DEST=%TARGET_DIR%\plugins\%PLUGIN_NAME%"
-set "CLAUDE_COMMANDS_DEST=%TARGET_DIR%\.claude\commands"
-set "CLAUDE_SKILLS_DEST=%TARGET_DIR%\.claude\skills"
+set "CLAUDE_PLUGIN_DEST=%TARGET_DIR%\.claude\skills\%PLUGIN_NAME%-claude"
+set "LEGACY_CLAUDE_COMMANDS_DEST=%TARGET_DIR%\.claude\commands"
+set "LEGACY_CLAUDE_SKILL_DEST=%TARGET_DIR%\.claude\skills\%PLUGIN_NAME%"
+set "OPENCODE_COMMANDS_DEST=%TARGET_DIR%\.opencode\commands"
+set "OPENCODE_SKILL_DEST=%TARGET_DIR%\.opencode\skills\%PLUGIN_NAME%"
 set "PYTHON_VERSION=3.13.11"
 set "PYTHON_MINOR=313"
 set "PYMUPDF4LLM_PACKAGE=pymupdf4llm"
@@ -19,6 +22,11 @@ set "XPDF_VERSION=4.06"
 
 if not exist "%SCRIPT_DIR%.codex-plugin\plugin.json" (
   echo Missing source path: %SCRIPT_DIR%.codex-plugin\plugin.json
+  exit /b 1
+)
+
+if not exist "%SCRIPT_DIR%.claude-plugin\plugin.json" (
+  echo Missing source path: %SCRIPT_DIR%.claude-plugin\plugin.json
   exit /b 1
 )
 
@@ -48,36 +56,51 @@ xcopy "%SCRIPT_DIR%commands" "%CODEX_DEST%\commands\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
 xcopy "%SCRIPT_DIR%skills" "%CODEX_DEST%\skills\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
+call :filter_frontmatter codex "%SCRIPT_DIR%skills\%PLUGIN_NAME%\SKILL.md" "%CODEX_DEST%\skills\%PLUGIN_NAME%\SKILL.md"
+if errorlevel 1 exit /b 1
+for %%F in ("%SCRIPT_DIR%commands\*.md") do (
+  call :filter_frontmatter codex "%%~fF" "%CODEX_DEST%\commands\%%~nxF"
+  if errorlevel 1 exit /b 1
+)
 del /s /q "%CODEX_DEST%\.DS_Store" >nul 2>nul
 
-echo Installing Claude command and skill files...
-mkdir "%CLAUDE_COMMANDS_DEST%" >nul 2>nul
-mkdir "%CLAUDE_SKILLS_DEST%" >nul 2>nul
-del /q "%CLAUDE_COMMANDS_DEST%\wgo_*.md" >nul 2>nul
-copy /Y "%SCRIPT_DIR%commands\onboard.md" "%CLAUDE_COMMANDS_DEST%\wgo_onboard.md" >nul
+echo Installing Claude plugin files...
+for %%C in (onboard audit status summarize operationalize) do del /q "%LEGACY_CLAUDE_COMMANDS_DEST%\wgo_%%C.md" >nul 2>nul
+if exist "%LEGACY_CLAUDE_SKILL_DEST%" rmdir /s /q "%LEGACY_CLAUDE_SKILL_DEST%"
+if exist "%CLAUDE_PLUGIN_DEST%" rmdir /s /q "%CLAUDE_PLUGIN_DEST%"
+mkdir "%CLAUDE_PLUGIN_DEST%" >nul 2>nul
+xcopy "%SCRIPT_DIR%.claude-plugin" "%CLAUDE_PLUGIN_DEST%\.claude-plugin\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
-copy /Y "%SCRIPT_DIR%commands\audit.md" "%CLAUDE_COMMANDS_DEST%\wgo_audit.md" >nul
+xcopy "%SCRIPT_DIR%commands" "%CLAUDE_PLUGIN_DEST%\commands\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
-copy /Y "%SCRIPT_DIR%commands\status.md" "%CLAUDE_COMMANDS_DEST%\wgo_status.md" >nul
+xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\references" "%CLAUDE_PLUGIN_DEST%\references\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
-copy /Y "%SCRIPT_DIR%commands\summarize.md" "%CLAUDE_COMMANDS_DEST%\wgo_summarize.md" >nul
+xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\scripts" "%CLAUDE_PLUGIN_DEST%\scripts\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
-copy /Y "%SCRIPT_DIR%commands\operationalize.md" "%CLAUDE_COMMANDS_DEST%\wgo_operationalize.md" >nul
+call :filter_frontmatter claude "%SCRIPT_DIR%skills\%PLUGIN_NAME%\SKILL.md" "%CLAUDE_PLUGIN_DEST%\SKILL.md"
 if errorlevel 1 exit /b 1
-powershell -NoProfile -Command "(Get-Content '%CLAUDE_COMMANDS_DEST%\wgo_onboard.md') -replace '^name: onboard$', 'name: wgo_onboard' | Set-Content '%CLAUDE_COMMANDS_DEST%\wgo_onboard.md'"
+for %%F in ("%SCRIPT_DIR%commands\*.md") do (
+  call :filter_frontmatter claude "%%~fF" "%CLAUDE_PLUGIN_DEST%\commands\%%~nxF"
+  if errorlevel 1 exit /b 1
+)
+del /s /q "%CLAUDE_PLUGIN_DEST%\.DS_Store" >nul 2>nul
+
+echo Installing OpenCode command files...
+mkdir "%OPENCODE_COMMANDS_DEST%" >nul 2>nul
+for %%C in (onboard audit status summarize operationalize) do (
+  del /q "%OPENCODE_COMMANDS_DEST%\wgo-%%C.md" >nul 2>nul
+  call :filter_frontmatter opencode-command "%SCRIPT_DIR%commands\%%C.md" "%OPENCODE_COMMANDS_DEST%\wgo-%%C.md"
+  if errorlevel 1 exit /b 1
+)
+if exist "%OPENCODE_SKILL_DEST%" rmdir /s /q "%OPENCODE_SKILL_DEST%"
+mkdir "%OPENCODE_SKILL_DEST%" >nul 2>nul
+xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\references" "%OPENCODE_SKILL_DEST%\references\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
-powershell -NoProfile -Command "(Get-Content '%CLAUDE_COMMANDS_DEST%\wgo_audit.md') -replace '^name: audit$', 'name: wgo_audit' | Set-Content '%CLAUDE_COMMANDS_DEST%\wgo_audit.md'"
+xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\scripts" "%OPENCODE_SKILL_DEST%\scripts\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
-powershell -NoProfile -Command "(Get-Content '%CLAUDE_COMMANDS_DEST%\wgo_status.md') -replace '^name: status$', 'name: wgo_status' | Set-Content '%CLAUDE_COMMANDS_DEST%\wgo_status.md'"
+call :filter_frontmatter opencode-skill "%SCRIPT_DIR%skills\%PLUGIN_NAME%\SKILL.md" "%OPENCODE_SKILL_DEST%\SKILL.md"
 if errorlevel 1 exit /b 1
-powershell -NoProfile -Command "(Get-Content '%CLAUDE_COMMANDS_DEST%\wgo_summarize.md') -replace '^name: summarize$', 'name: wgo_summarize' | Set-Content '%CLAUDE_COMMANDS_DEST%\wgo_summarize.md'"
-if errorlevel 1 exit /b 1
-powershell -NoProfile -Command "(Get-Content '%CLAUDE_COMMANDS_DEST%\wgo_operationalize.md') -replace '^name: operationalize$', 'name: wgo_operationalize' | Set-Content '%CLAUDE_COMMANDS_DEST%\wgo_operationalize.md'"
-if errorlevel 1 exit /b 1
-if exist "%CLAUDE_SKILLS_DEST%\%PLUGIN_NAME%" rmdir /s /q "%CLAUDE_SKILLS_DEST%\%PLUGIN_NAME%"
-xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%" "%CLAUDE_SKILLS_DEST%\%PLUGIN_NAME%\" /E /I /Y >nul
-if errorlevel 1 exit /b 1
-del /s /q "%CLAUDE_SKILLS_DEST%\%PLUGIN_NAME%\.DS_Store" >nul 2>nul
+del /s /q "%OPENCODE_SKILL_DEST%\.DS_Store" >nul 2>nul
 
 echo.
 echo Whats.Going.On. installed.
@@ -86,8 +109,11 @@ echo Codex:
 echo   %CODEX_DEST%
 echo.
 echo Claude:
-echo   %CLAUDE_COMMANDS_DEST%\wgo_*.md
-echo   %CLAUDE_SKILLS_DEST%\%PLUGIN_NAME%
+echo   %CLAUDE_PLUGIN_DEST%
+echo.
+echo OpenCode:
+echo   %OPENCODE_COMMANDS_DEST%\wgo-*.md
+echo   %OPENCODE_SKILL_DEST%
 echo.
 echo PDF extraction:
 echo   PyMuPDF4LLM is optional. If installed, restart Codex or Claude before using it.
@@ -98,11 +124,16 @@ echo   installations leave their built-in WGO fallbacks in place.
 echo.
 echo Next:
 echo   In Codex, run wgo:onboard to start an audit.
-echo   In Claude, run /wgo_onboard to start an audit.
-echo   After a completed synthesis, run wgo:operationalize or /wgo_operationalize only with explicit auditor approval.
+echo   In Claude, run /wgo:onboard to start an audit.
+echo   In OpenCode, run /wgo-onboard to start an audit.
+echo   After a completed synthesis, use the provider's WGO operationalize command only with explicit auditor approval.
 
 endlocal
 exit /b 0
+
+:filter_frontmatter
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%scripts\filter-frontmatter.ps1" -Provider "%~1" -Source "%~2" -Destination "%~3"
+exit /b %errorlevel%
 
 :ask_to_install
 echo.

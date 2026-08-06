@@ -3,12 +3,15 @@ name: onboard
 description: Design or resume a Whats.Going.On. audit for the current project folder.
 args: "[compare|blind-compare] [YYYYMMDD]"
 skills: wgo
+argument-hint: "[compare|blind-compare] [YYYYMMDD]"
+disable-model-invocation: true
 ---
 
 # /onboard
 
-Resolve audit roots with `skills/wgo/references/common/audit-root.md`, then run
-`skills/wgo/references/common/onboarding.md`.
+Load and use the WGO skill. Resolve audit roots with its
+`references/common/audit-root.md`, then run its
+`references/common/onboarding.md`.
 
 The audit covers the full current project folder at detailed depth. Quietly
 perform read-only discovery and confirm company/product context. When a prior

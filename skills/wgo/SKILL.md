@@ -1,6 +1,8 @@
 ---
 name: wgo
-description: Evidence-led startup and SMB transition-control audit workflow for products, repositories, teams, vendors, continuity, value, cost, security, delivery, and architecture. Use when Codex should onboard or resume a Whats.Going.On. audit, run one approved audit reviewer, report audit status, synthesize decision-grade reports, or turn an approved synthesis into clearly untested operator aids.
+description: Evidence-led startup and SMB transition-control audit workflow for products, repositories, teams, vendors, continuity, value, cost, security, delivery, and architecture. Use when the active agent should onboard or resume a Whats.Going.On. audit, run one approved audit reviewer, report audit status, synthesize decision-grade reports, or turn an approved synthesis into clearly untested operator aids.
+when_to_use: Use when Claude should onboard or resume a Whats.Going.On. audit, run one approved audit reviewer, report audit status, synthesize decision-grade reports, or turn an approved synthesis into clearly untested operator aids.
+user-invocable: false
 ---
 
 # Whats.Going.On.
@@ -11,15 +13,21 @@ source-backed artifacts; do not make the auditor administer a process model.
 
 ## Commands
 
-- `wgo:onboard [compare|blind-compare] [YYYYMMDD]`: start or improve an audit,
+- `wgo:onboard [compare|blind-compare] [YYYYMMDD]` (Codex),
+  `/wgo:onboard [compare|blind-compare] [YYYYMMDD]` (Claude), or
+  `/wgo-onboard [compare|blind-compare] [YYYYMMDD]` (OpenCode): start or improve an audit,
   run a light comparison, or run a blind audit followed by comparison.
-- `wgo:audit [reviewer-id|all]`: run one selected reviewer, or `all`/no
+- `wgo:audit [reviewer-id|all]` (Codex), `/wgo:audit [reviewer-id|all]`
+  (Claude), or `/wgo-audit [reviewer-id|all]` (OpenCode): run one selected reviewer, or `all`/no
   parameter runs every selected reviewer in coordinator-defined dependency waves
   and then synthesis.
-- `wgo:status`: read the checklist and material open items.
-- `wgo:summarize`: reconcile completed work into three audience reports, then
+- `wgo:status` (Codex), `/wgo:status` (Claude), or `/wgo-status` (OpenCode):
+  read the checklist and material open items.
+- `wgo:summarize` (Codex), `/wgo:summarize` (Claude), or `/wgo-summarize`
+  (OpenCode): reconcile completed work into three audience reports, then
   ask before operationalization.
-- `wgo:operationalize`: after explicit approval of a completed synthesis, draft
+- `wgo:operationalize` (Codex), `/wgo:operationalize` (Claude), or
+  `/wgo-operationalize` (OpenCode): after explicit approval of a completed synthesis, draft
   a four-part, source-linked, untested operating packet:
   replacement-maintainer, recovery, observability, and IAM/credential control.
   Before drafting, name that packet and ask whether to add an optional aid.

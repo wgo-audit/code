@@ -2,16 +2,19 @@
 name: operationalize
 description: Turn an approved synthesis into explicitly untested, source-linked operator aids without executing procedures or changing systems.
 skills: wgo
+disable-model-invocation: true
 ---
 
 # /operationalize
 
-Codex users may invoke this as `wgo:operationalize`.
+Invoke this as `wgo:operationalize` in Codex, `/wgo:operationalize` in Claude,
+or `/wgo-operationalize` in OpenCode.
 
-Resolve the newest dated audit root with
-`skills/wgo/references/common/audit-root.md`.
+Load and use the WGO skill. Resolve the newest dated audit root with its
+`references/common/audit-root.md`.
 
-Run the complete workflow in `skills/wgo/references/common/operationalization.md`.
+Run the complete workflow in its
+`references/common/operationalization.md`.
 
 Hard rules:
 

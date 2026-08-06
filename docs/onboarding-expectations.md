@@ -1,8 +1,9 @@
 # What To Expect During WGO Onboarding
 
-`wgo:onboard` turns a broad concern into an audit boundary that is useful to
-the people who will act on its results. Every independent audit uses
-`_whats-going-on-YYYYMMDD`, dated when onboarding starts.
+The WGO onboarding command turns a broad concern into an audit boundary that is
+useful to the people who will act on its results. Invoke it as `wgo:onboard` in
+Codex, `/wgo:onboard` in Claude, or `/wgo-onboard` in OpenCode. Every
+independent audit uses `_whats-going-on-YYYYMMDD`, dated when onboarding starts.
 
 WGO audits the complete current folder and any confirmed supporting code
 repositories at detailed transition-control depth. It does not change the
@@ -23,11 +24,11 @@ answers, known unknowns, and success criteria.
 
 Use one of three modes:
 
-| Command | Behavior |
-|---|---|
-| `wgo:onboard` | Improve the newest audit in its existing read-write root. |
-| `wgo:onboard compare [YYYYMMDD]` | Create today's audit root and reassess only findings and open items from the specified completed baseline, or the latest completed audit when the date is omitted. |
-| `wgo:onboard blind-compare [YYYYMMDD]` | Run a full audit without exposing baseline findings, then compare the two completed audits in detail. |
+| Behavior | Codex | Claude | OpenCode |
+|---|---|---|---|
+| Improve the newest audit in its existing read-write root. | `wgo:onboard` | `/wgo:onboard` | `/wgo-onboard` |
+| Create today's audit root and reassess only findings and open items from the specified completed baseline, or the latest completed audit when the date is omitted. | `wgo:onboard compare [YYYYMMDD]` | `/wgo:onboard compare [YYYYMMDD]` | `/wgo-onboard compare [YYYYMMDD]` |
+| Run a full audit without exposing baseline findings, then compare the two completed audits in detail. | `wgo:onboard blind-compare [YYYYMMDD]` | `/wgo:onboard blind-compare [YYYYMMDD]` | `/wgo-onboard blind-compare [YYYYMMDD]` |
 
 For either comparison mode, WGO compares the baseline reviewer versions with
 the installed packages. An unavailable selected package blocks the run. WGO
@@ -164,6 +165,8 @@ It uses the auditor's active platform and existing session only; WGO never
 needs another model provider's credentials to prepare the catalog.
 
 For a reused configuration, answering no to the update question proceeds
-without a second start question. First-ever onboarding asks:
-`Should I proceed with wgo:audit all?` Once reviewers finish, WGO automatically
-synthesizes the results and asks before drafting any operator aids.
+without a second start question. First-ever onboarding asks permission to run
+every selected reviewer. The corresponding commands are `wgo:audit all` in
+Codex, `/wgo:audit all` in Claude, and `/wgo-audit all` in OpenCode. Once
+reviewers finish, WGO automatically synthesizes the results and asks before
+drafting any operator aids.

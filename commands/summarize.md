@@ -2,16 +2,18 @@
 name: summarize
 description: Reconcile completed Whats.Going.On. reviewers and create decision-grade audience reports.
 skills: wgo
+disable-model-invocation: true
 ---
 
 # /summarize
 
-Codex users may invoke this as `wgo:summarize`.
+Invoke this as `wgo:summarize` in Codex, `/wgo:summarize` in Claude, or
+`/wgo-summarize` in OpenCode.
 
-Resolve the newest dated audit root with
-`skills/wgo/references/common/audit-root.md`.
+Load and use the WGO skill. Resolve the newest dated audit root with its
+`references/common/audit-root.md`.
 
-Run `skills/wgo/references/common/synthesis.md`. Read completed
+Run its `references/common/synthesis.md`. Read completed
 reviewer reports, their handoffs, and linked evidence/artifacts directly.
 Reconcile before drafting and preserve source-access limits, uncertainty, and
 evidence cutoff.
