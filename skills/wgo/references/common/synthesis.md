@@ -35,13 +35,15 @@ unverifiable conclusions. Do not call a finding introduced unless dated
 evidence establishes that timing.
 
 Promote a reviewer finding into a synthesis insight only when it changes a
-decision, priority, sequence, claim, or stop condition. Preserve all independent
-material insights; combine only those that change the same decision. Do not set
-a target number or promote a fact merely to fill one. In the executive summary's
-`Material Risks, Unknowns, And Decisions` section, add a `### Decision-Useful
-Conclusions` subsection when one or more material insights exist. Route each to
-the audience that must decide or act, with linked evidence and the smallest next
-move.
+decision, priority, sequence, claim, or stop condition. Preserve the finding's
+severity, effort, and taxonomy when carrying it into synthesis or technical
+lead notes; do not collapse severity into open-item priority. Preserve all
+independent material insights; combine only those that change the same
+decision. Do not set a target number or promote a fact merely to fill one. In
+the executive summary's `Material Risks, Unknowns, And Decisions` section, add
+a `### Decision-Useful Conclusions` subsection when one or more material
+insights exist. Route each to the audience that must decide or act, with linked
+evidence and the smallest next move.
 
 Then separate the remaining material open items into `### Decisions Now`,
 `### Evidence Needed`, and `### Implementation Corrections`, using the canonical

@@ -55,6 +55,8 @@ lane; do not present all P1 items as one queue.
 
 ## Current Technical Position
 ## Architecture, Operations, Quality, And Security Findings
+Preserve reviewer severity, effort, and taxonomy for material findings so
+technical readers can distinguish impact from fix size and framework mapping.
 ## Safe Evolution Priorities
 ## Traceability And Limits
 ```
