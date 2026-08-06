@@ -30,6 +30,7 @@ Create `references/reviewers/<reviewer-id>/reviewer.md` for a core package or
 id: <stable-kebab-id>
 name: <reader-facing name>
 summary: <one assessment question>
+version: 0.1
 codegraph: none | optional | required
 depends_on:
   - <core-reviewer-id>

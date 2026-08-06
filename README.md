@@ -304,7 +304,17 @@ may add a perspective or replace one core reviewer, but are always optional and
 auditor-approved. Each package carries its own metadata, workers, and optional
 dependency installer. See
 [Building a WGO reviewer](skills/wgo/references/common/reviewer-authoring.md) for the authoring model,
-examples, and validation behavior. The
+the scaffold at
+[`skills/wgo/references/reviewer-scaffold/example-reviewer/`](skills/wgo/references/reviewer-scaffold/example-reviewer/),
+version-bump rules, and validation behavior. Before opening a reviewer PR, run
+the structural package validator:
+
+```bash
+python3 skills/wgo/scripts/validate_reviewer_contract.py \
+  skills/wgo/references/reviewers/<reviewer-id>
+```
+
+The
 [canonical reviewer contract](skills/wgo/references/common/reviewer-contract.md)
 and [internal reviewer blueprint](skills/wgo/references/common/reviewer-blueprint.md)
 define the coordinator-facing details.
