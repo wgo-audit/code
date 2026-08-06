@@ -14,6 +14,9 @@ EXPECTED_REVIEWERS = {
     "product-value", "project-health", "revenue-risk", "scalability",
     "security-privacy",
 }
+EXPECTED_REVIEWER_VERSIONS = {
+    "security-privacy": "0.2",
+}
 
 
 def reviewer_card(reviewer_id: str) -> Path:
@@ -67,7 +70,8 @@ class SkillContractTests(unittest.TestCase):
         for reviewer_id, path in files.items():
             content = path.read_text(encoding="utf-8")
             self.assertRegex(content, rf"(?m)^id: {re.escape(reviewer_id)}$")
-            self.assertRegex(content, r"(?m)^version: 0\.1$")
+            expected_version = EXPECTED_REVIEWER_VERSIONS.get(reviewer_id, "0.1")
+            self.assertRegex(content, rf"(?m)^version: {re.escape(expected_version)}$")
             self.assertRegex(content, r"(?m)^codegraph: (?:none|optional|required)$")
             dependencies = set(frontmatter_dependencies(path))
             self.assertLessEqual(dependencies, EXPECTED_REVIEWERS)
@@ -660,6 +664,17 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("public security, privacy, and disclosure claims", security)
         self.assertIn("abuse or\nmisuse controls", security)
         self.assertIn("trust material to its consumer validation", identity)
+        self.assertIn("vulnerability-class checklist", security)
+        self.assertIn("OSPS Baseline tier", security)
+        self.assertIn("trust-anchor consumption", security)
+        self.assertIn("supply-chain-and-tooling.md", security)
+
+        checklist = (REVIEWERS / "security-privacy/vulnerability-class-checklist.md").read_text(encoding="utf-8")
+        tooling = (REVIEWERS / "security-privacy/workers/supply-chain-and-tooling.md").read_text(encoding="utf-8")
+        for phrase in ("Canonicalization", "Data minimization", "Product-Class Abuse"):
+            self.assertIn(phrase, checklist)
+        for phrase in ("OpenSSF Scorecard", "OSV-Scanner", "gitleaks", "SBOM", "trust anchor"):
+            self.assertIn(phrase, tooling)
 
     def test_structural_validation_is_optional(self) -> None:
         workflow = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
@@ -730,7 +745,7 @@ class SkillContractTests(unittest.TestCase):
             "architecture": 3,
             "code-quality": 4,
             "product-value": 5,
-            "security-privacy": 2,
+            "security-privacy": 3,
             "business-continuity": 2,
             "scalability": 2,
             "contributor-vendor-value": 1,
