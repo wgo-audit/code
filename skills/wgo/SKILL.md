@@ -24,14 +24,19 @@ source-backed artifacts; do not make the auditor administer a process model.
 - `wgo:status` (Codex), `/wgo:status` (Claude), or `/wgo-status` (OpenCode):
   read the checklist and material open items.
 - `wgo:summarize` (Codex), `/wgo:summarize` (Claude), or `/wgo-summarize`
-  (OpenCode): reconcile completed work into three audience reports, then
-  ask before operationalization.
+  (OpenCode): reconcile completed work into three audience reports, calculate
+  a reconciled API-equivalent audit cost estimate, then ask before
+  operationalization.
+- `wgo:cost` (Codex), `/wgo:cost` (Claude), or `/wgo-cost` (OpenCode):
+  calculate a reproducible API-equivalent cost estimate from the completed
+  audit's recorded Codex session JSONL files.
 - `wgo:operationalize` (Codex), `/wgo:operationalize` (Claude), or
   `/wgo-operationalize` (OpenCode): after explicit approval of a completed synthesis, draft
   a four-part, source-linked, untested operating packet:
   replacement-maintainer, recovery, observability, and IAM/credential control.
   Before drafting, name that packet and ask whether to add an optional aid.
-  It never executes a procedure or authorizes a system change.
+  It never executes a procedure or authorizes a system change. After the
+  packet is complete, it refreshes the cost estimate through operationalization.
 
 ## Rules
 
@@ -62,6 +67,12 @@ source-backed artifacts; do not make the auditor administer a process model.
 - The audit coordinator owns scope and synthesis. A reviewer owns its own
   evidence reconciliation, artifacts, report, and handoff. Bounded collectors
   return evidence packets only.
+- Keep model routing centralized rather than declaring models in reviewer
+  packages. In Codex, coordinators and reviewers use the auditor-selected
+  active model; every delegated WGO worker uses `gpt-5.6-terra` at high
+  reasoning. If Terra is not selectable, use the active audit model. Other
+  platforms use the same-platform model named by the workflow or their active
+  audit model.
 - Reviewer packages are discovered during onboarding. External reviewers and
   core substitutions are optional until the auditor approves them.
 
@@ -102,9 +113,17 @@ reading an output template that has not been selected.
 - Status: `references/common/reviewer-audit.md`.
 - Synthesis: `references/common/synthesis.md`,
   `references/common/evidence-rules.md`, `references/common/reconciliation.md`,
-  and `references/templates/report-templates.md`.
+  `references/templates/report-templates.md`, and, after synthesis validation,
+  `references/common/cost-estimation.md`.
+- Cost estimation: `references/common/cost-estimation.md` and
+  `references/templates/cost-estimate-template.md`. It is a coordinator phase:
+  discover and freeze the audit-session manifest before calculation, run
+  exactly two independent Terra-high verification passes over that same
+  manifest, and write `controls/cost-estimate.md` with its frozen calculation
+  evidence.
 - Operationalize: `references/common/operationalization.md`,
-  `references/common/evidence-rules.md`, and the selected template(s).
+  `references/common/evidence-rules.md`, the selected template(s), and then
+  `references/common/cost-estimation.md` to refresh the cost estimate.
 
 ## New-Audit Layout
 
@@ -120,6 +139,7 @@ _whats-going-on-YYYYMMDD/
     packets/<selected-collector>.md
   controls/
     open-items.md
+    cost-estimate.md
     <selected reviewer-owned artifact directories>
   reviewer-reports/<reviewer-id>/
     report.md

@@ -128,7 +128,7 @@ flowchart TB
 1. **Onboard:** establish the product, mandate, evidence boundary, success criteria, and selected reviewers. WGO also discovers project-local reviewer extensions, but never selects one without approval.
 2. **Audit:** inspect one reviewer or run all selected reviewers in coordinator-defined dependency waves; register evidence, ask material questions, and update shared controls.
 3. **Check status:** see completed work, open proof, access blockers, risks, decisions, and remaining reviewers.
-4. **Summarize:** reconcile the whole audit and create decision-grade reports for each audience.
+4. **Summarize:** reconcile the whole audit, create decision-grade reports for each audience, and produce a reconciled API-equivalent audit cost estimate.
 5. **Operationalize when justified:** after a completed audit, explicitly request draft operator aids. WGO will not execute them or change a system.
 
 Run a named reviewer when you want focused control. With no reviewer argument,
@@ -143,6 +143,7 @@ that do not depend on each other.
 | Run one reviewer or all selected reviewers | `wgo:audit [reviewer-id\|all]` | `/wgo:audit [reviewer-id\|all]` | `/wgo-audit [reviewer-id\|all]` |
 | Show truthful progress and blockers | `wgo:status` | `/wgo:status` | `/wgo-status` |
 | Reconcile findings and generate reports | `wgo:summarize` | `/wgo:summarize` | `/wgo-summarize` |
+| Produce a reconciled API-equivalent audit cost estimate | `wgo:cost` | `/wgo:cost` | `/wgo-cost` |
 | Draft operator aids after approved synthesis | `wgo:operationalize` | `/wgo:operationalize` | `/wgo-operationalize` |
 
 The audit always concerns the full project in the current folder, including all
@@ -212,6 +213,10 @@ An audit should not silently turn into operational work. `wgo:operationalize` is
 1. A synthesis is completed or completed with open verification.
 2. The auditor explicitly requests operationalization.
 3. Creating local audit artifacts is permitted.
+
+When operationalization completes, WGO refreshes `controls/cost-estimate.md`
+through the operator-aid phase. It preserves the earlier audit-only cost
+manifest and excludes both cost-calculation passes from the estimate.
 
 It produces a focused four-part operating packet. These are complementary
 operating perspectives, not variants of one generic runbook:

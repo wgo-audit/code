@@ -4,6 +4,10 @@ Use for `wgo:onboard`. Onboarding agrees a bounded audit before it writes
 anything. Explain that WGO audits the current folder, reads approved sources,
 and creates evidence-backed outputs without changing the audited system.
 
+Before doing onboarding work, emit this normal progress message once:
+`Starting onboarding. <!-- WGO_PHASE_ONBOARDING_START -->`. The HTML comment is
+a persisted cost-attribution marker, not audit evidence.
+
 ## Resolve Mode And Audit Root
 
 Parse only these forms:
@@ -230,7 +234,7 @@ repository URL/ref/resolved-commit/local-root mappings, converter availability,
 catalog output path, audit mandate, selected reviewer IDs, cheap
 source-discovery capability signals, active audit platform, and selected
 catalog model. Select only from that active platform: Codex/OpenAI uses
-`gpt-5.6-luna` at high reasoning, Claude/Anthropic uses Sonnet 5 at high
+`gpt-5.6-terra` at high reasoning, Claude/Anthropic uses Sonnet 5 at high
 reasoning, and Antigravity/Gemini uses `gemini-3.5-flash-lite`; another platform
 uses its active audit model. If the preferred same-platform model is not
 selectable, use the active audit model. Do not request, configure, or use another provider's credentials or API.

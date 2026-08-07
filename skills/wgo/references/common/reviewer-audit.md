@@ -3,6 +3,11 @@
 Use for `wgo:audit <reviewer-id>`. A reviewer is a bounded evidence-to-artifact loop,
 not a parallel state system.
 
+Before doing reviewer or audit-coordination work for this invocation, emit this
+normal progress message once: `Starting reviewer execution. <!--
+WGO_PHASE_AUDIT_START -->`. The HTML comment is a persisted cost-attribution
+marker, not audit evidence.
+
 ## Inputs And Output Selection
 
 Read `audit-brief.md`, the reviewer card, its relevant predecessor handoffs,
@@ -138,6 +143,14 @@ read `artifact-quality-review.md`. Give it the reviewer question, draft outputs,
 and their cited evidence. The reviewer does not read the worker rubric. Revise
 the selected outputs once from its feedback; the worker writes no artifact,
 shared state, or gate.
+
+Before marking the reviewer complete, reconcile the quality worker and every
+other task recursively spawned by this reviewer against recorded lifecycle
+provenance. Each start requires exactly one terminal outcome: completed,
+failed, cancelled, or interrupted. Do not infer closure from returned prose or
+an artifact. Leave the reviewer incomplete while a task is running, open,
+multiply terminated, or ambiguously correlated, and return the exact task and
+session to the coordinator.
 
 On a resume in the same audit root, read the prior open-items table and relevant
 decision inventory/register before writing. For each material prior open item,

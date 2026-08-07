@@ -28,3 +28,8 @@ Hard rules:
 - Create an operating-control strategy only when the completed controls need an explicit stabilization and authority model; it is a derived decision aid, not a second backlog or a runbook.
 - Create the four-part transition packet at `operator-aids/`: `replacement-maintainer`, `recovery`, `observability`, and `iam-and-credential-control`. Keep them separate, cross-linked, and evidence-bounded.
 - Do not create a fixed-size 72-hour mission board. Generate the execution-priority taxonomy instead.
+- After the packet is complete, emit the operationalization-complete cutoff and
+  rerun `references/common/cost-estimation.md`. Update
+  `controls/cost-estimate.md` through operationalization without modifying the
+  frozen audit-only cost evidence or charging either cost-calculation phase to
+  the audit.

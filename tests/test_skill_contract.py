@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
 import re
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -39,6 +42,35 @@ def frontmatter_dependencies(path: Path) -> list[str]:
                 continue
             break
     return dependencies
+
+
+def run_cost_fixture(manifest_name: str) -> dict[str, object]:
+    workflow = (SKILL / "references/common/cost-estimation.md").read_text(
+        encoding="utf-8"
+    )
+    match = re.search(
+        r"```sh\npython3 - .*? <<'PY'\n(?P<recipe>.*?)\nPY\n```",
+        workflow,
+        re.DOTALL,
+    )
+    if not match:
+        raise AssertionError("portable cost recipe not found")
+    fixture = SKILL / "references/fixtures/cost-estimation"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-",
+            str(fixture / manifest_name),
+            str(SKILL / "references/data/api-rate-card-2026-08-07.json"),
+        ],
+        input=match.group("recipe"),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode:
+        raise AssertionError(result.stderr)
+    return json.loads(result.stdout)
 
 
 class SkillContractTests(unittest.TestCase):
@@ -237,7 +269,8 @@ class SkillContractTests(unittest.TestCase):
         skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
 
         for content in (onboarding, preparation):
-            self.assertIn("gpt-5.6-luna", content)
+            self.assertIn("gpt-5.6-terra", content)
+            self.assertIn("high reasoning", content)
             self.assertIn("Sonnet 5", content)
             self.assertIn("gemini-3.5-flash-lite", content)
             self.assertIn("active audit model", content)
@@ -250,6 +283,10 @@ class SkillContractTests(unittest.TestCase):
         )
         self.assertIn(
             "active audit platform, and chosen same-platform catalog model",
+            " ".join(skill.split()),
+        )
+        self.assertIn(
+            "every delegated WGO worker uses `gpt-5.6-terra` at high reasoning",
             " ".join(skill.split()),
         )
 
@@ -347,6 +384,116 @@ class SkillContractTests(unittest.TestCase):
         self.assertNotIn("| 6 | Synthesis |", audit)
         self.assertIn("Should I proceed with\nwgo:operationalize?", summary)
         self.assertIn("Should I proceed with wgo:operationalize?", synthesis)
+
+    def test_cost_phases_are_attributed_and_operationalization_refreshes_the_estimate(self) -> None:
+        onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
+        audit = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
+        synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
+        operationalization = (
+            SKILL / "references/common/operationalization.md"
+        ).read_text(encoding="utf-8")
+        cost = (SKILL / "references/common/cost-estimation.md").read_text(encoding="utf-8")
+        cost_template = (
+            SKILL / "references/templates/cost-estimate-template.md"
+        ).read_text(encoding="utf-8")
+        skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        command = (ROOT / "commands/operationalize.md").read_text(encoding="utf-8")
+
+        self.assertIn("WGO_PHASE_ONBOARDING_START", onboarding)
+        self.assertIn("WGO_PHASE_AUDIT_START", audit)
+        self.assertIn("WGO_PHASE_SUMMARY_START", synthesis)
+        self.assertIn("WGO_AUDIT_COMPLETE_COST_PHASE_STARTS", synthesis)
+        self.assertIn("WGO_PHASE_OPERATIONALIZATION_START", operationalization)
+        self.assertIn(
+            "WGO_OPERATIONALIZATION_COMPLETE_COST_PHASE_STARTS",
+            operationalization,
+        )
+        self.assertIn("cost-manifest-operationalized.json", cost)
+        self.assertIn('"excluded": ["cost-estimation"]', cost)
+        self.assertIn("phase subtotals", cost)
+        self.assertIn("cost-estimate-template.md", cost)
+        self.assertIn("cost-estimate-template.md", skill)
+        self.assertIn("display every priced", cost_template)
+        self.assertIn("`$X.XX`", cost_template)
+        self.assertIn("rounded half up", cost_template)
+        self.assertIn("never sum already-rounded display rows", cost_template)
+        self.assertIn("Use `unpriced`, not `$0.00`", " ".join(cost_template.split()))
+        self.assertIn("## Token Totals By Session And Model", cost_template)
+        self.assertIn("Update\n  `controls/cost-estimate.md`", command)
+        self.assertIn("preserve the frozen\naudit-only manifest", operationalization)
+
+    def test_cost_fixture_bounds_full_history_and_suppresses_unchanged_echoes(self) -> None:
+        fixture = SKILL / "references/fixtures/cost-estimation"
+        for manifest_name, expected_name in (
+            ("frozen-manifest.json", "expected-result.json"),
+            ("operationalized-manifest.json", "expected-operationalized-result.json"),
+        ):
+            actual = run_cost_fixture(manifest_name)
+            expected = json.loads((fixture / expected_name).read_text(encoding="utf-8"))
+            self.assertEqual(expected, actual)
+            self.assertFalse(actual["issues"])
+            self.assertEqual(
+                {"ses-child", "ses-nested"},
+                {item["first"]["session_id"] for item in actual["duplicates"]},
+            )
+            self.assertTrue(
+                all(item["kind"] == "unchanged-legacy-state"
+                    for item in actual["duplicates"])
+            )
+
+        manifest = json.loads(
+            (fixture / "frozen-manifest.json").read_text(encoding="utf-8")
+        )
+        descendants = {
+            session["session_id"]: session
+            for session in manifest["sessions"]
+            if session["root_relationship"] == "descendant"
+        }
+        self.assertEqual({"ses-child", "ses-nested"}, set(descendants))
+        self.assertEqual(5, descendants["ses-child"]["lifecycle"]["start"]["line_number"])
+        self.assertEqual(10, descendants["ses-child"]["lifecycle"]["terminal"]["line_number"])
+        self.assertEqual(11, descendants["ses-nested"]["lifecycle"]["start"]["line_number"])
+        self.assertEqual(15, descendants["ses-nested"]["lifecycle"]["terminal"]["line_number"])
+        child_first = json.loads(
+            (fixture / "child.jsonl").read_text(encoding="utf-8").splitlines()[0]
+        )
+        self.assertEqual("ses-root", child_first["payload"]["id"])
+        self.assertEqual(
+            "ses-child", descendants["ses-child"]["session_meta"]["session_id"]
+        )
+        self.assertEqual(
+            {"ses-unrelated"},
+            {session["session_id"] for session in manifest["exclusions"]},
+        )
+
+    def test_delegated_task_lifecycle_gate_precedes_synthesis(self) -> None:
+        command = (ROOT / "commands/audit.md").read_text(encoding="utf-8")
+        reviewer = (SKILL / "references/common/reviewer-audit.md").read_text(
+            encoding="utf-8"
+        )
+        synthesis = (SKILL / "references/common/synthesis.md").read_text(
+            encoding="utf-8"
+        )
+        cost = (SKILL / "references/common/cost-estimation.md").read_text(
+            encoding="utf-8"
+        )
+
+        for content in (command, reviewer, synthesis):
+            normalized = " ".join(content.split())
+            self.assertIn("exactly one terminal outcome", normalized)
+            for outcome in ("completed", "failed", "cancelled", "interrupted"):
+                self.assertIn(outcome, normalized)
+            self.assertIn("Do not infer closure", normalized)
+        self.assertLess(
+            synthesis.index("exactly one\nterminal outcome"),
+            synthesis.index("WGO_PHASE_SUMMARY_START"),
+        )
+        self.assertIn("blocks synthesis", cost)
+        self.assertIn("Parse only that inclusive interval", cost)
+        self.assertIn(
+            "Never select whichever metadata record happens to appear last",
+            " ".join(cost.split()),
+        )
 
     def test_architecture_and_product_require_decision_inventory_and_register(self) -> None:
         architecture = reviewer_card("architecture").read_text(encoding="utf-8")

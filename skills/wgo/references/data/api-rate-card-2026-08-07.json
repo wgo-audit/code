@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "rate_card_date": "2026-08-07",
+  "currency": "USD",
+  "pricing_basis": "OpenAI API token pricing, USD per 1,000,000 tokens; direct API standard/Batch/Flex/Fast mode, with returned or threshold-derived context band. This is not a Codex subscription invoice.",
+  "api_equivalent_default_service_tier": "standard",
+  "context_band_rule": {
+    "long_context_input_tokens_gt": 272000,
+    "short": "input_tokens <= 272000",
+    "long": "input_tokens > 272000",
+    "source": "OpenAI pricing context threshold"
+  },
+  "source": "https://platform.openai.com/docs/pricing",
+  "source_checked_at": "2026-08-07",
+  "models": {
+    "gpt-5.6-sol": {
+      "standard": {"short": {"input": 5.00, "cached_input": 0.50, "output": 30.00}, "long": {"input": 10.00, "cached_input": 1.00, "output": 45.00}},
+      "batch": {"short": {"input": 2.50, "cached_input": 0.25, "output": 15.00}, "long": {"input": 5.00, "cached_input": 0.50, "output": 22.50}},
+      "flex": {"short": {"input": 2.50, "cached_input": 0.25, "output": 15.00}, "long": {"input": 5.00, "cached_input": 0.50, "output": 22.50}},
+      "fast": {"short": {"input": 10.00, "cached_input": 1.00, "output": 60.00}, "long": {"input": 20.00, "cached_input": 2.00, "output": 90.00}}
+    },
+    "gpt-5.6-terra": {
+      "standard": {"short": {"input": 2.00, "cached_input": 0.20, "output": 12.00}, "long": {"input": 4.00, "cached_input": 0.40, "output": 18.00}},
+      "batch": {"short": {"input": 1.00, "cached_input": 0.10, "output": 6.00}, "long": {"input": 2.00, "cached_input": 0.20, "output": 9.00}},
+      "flex": {"short": {"input": 1.00, "cached_input": 0.10, "output": 6.00}, "long": {"input": 2.00, "cached_input": 0.20, "output": 9.00}},
+      "fast": {"short": {"input": 4.00, "cached_input": 0.40, "output": 24.00}, "long": {"input": 8.00, "cached_input": 0.80, "output": 36.00}}
+    },
+    "gpt-5.6-luna": {
+      "standard": {"short": {"input": 0.20, "cached_input": 0.02, "output": 1.20}, "long": {"input": 0.40, "cached_input": 0.04, "output": 1.80}},
+      "batch": {"short": {"input": 0.10, "cached_input": 0.01, "output": 0.60}, "long": {"input": 0.20, "cached_input": 0.02, "output": 0.90}},
+      "flex": {"short": {"input": 0.10, "cached_input": 0.01, "output": 0.60}, "long": {"input": 0.20, "cached_input": 0.02, "output": 0.90}},
+      "fast": {"short": {"input": 0.40, "cached_input": 0.04, "output": 2.40}, "long": {"input": 0.80, "cached_input": 0.08, "output": 3.60}}
+    }
+  },
+  "notes": [
+    "`priority` is normalized to `fast` only when the raw record identifies that service tier.",
+    "When Codex rollout JSONL does not return a service tier, use this card's declared standard tier for a reproducible API-equivalent estimate; it does not identify the actual backend service tier.",
+    "Use a returned context band when present; otherwise derive only from the recorded `input_tokens` threshold above. Do not infer regional-processing uplift, tool charge, cache-write charge, or other surcharge from token totals."
+  ]
+}

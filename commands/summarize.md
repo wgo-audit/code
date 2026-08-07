@@ -23,5 +23,12 @@ and `technical-lead-notes.md` at the audit root. Include an owner-assigned
 30–90 day section only where evidence supports it. Do not create a separate
 reconciliation command, decision queue, or action backlog.
 
+After synthesis validation succeeds, run the complete `wgo:cost` phase before
+asking about operationalization. It must discover and freeze the audit-session
+manifest itself, use two independent Terra-high passes over that manifest, and
+write `controls/cost-estimate.md`. Link that control from `index.md` and the
+three audience reports. A cost result may be `Unreconciled`; do not suppress it
+or replace it with a precise total.
+
 After the summary is complete, ask exactly: `Should I proceed with
 wgo:operationalize?` Do not draft operator aids until the auditor answers yes.
