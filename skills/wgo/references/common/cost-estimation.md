@@ -1,6 +1,7 @@
-# Cost Estimation Workflow
+# Codex Cost Estimation Workflow
 
-Use for `wgo:cost`, at the end of `wgo:summarize`, and after a requested
+Use only when the audit platform recorded in `audit-brief.md` is Codex. Use for
+`wgo:cost`, at the end of `wgo:summarize`, and after a requested
 `wgo:operationalize`. This is a portable, API-equivalent estimate of the
 completed work's recorded model requests. It is not a Codex invoice.
 

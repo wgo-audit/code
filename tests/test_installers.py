@@ -129,12 +129,27 @@ class InstallerTests(unittest.TestCase):
                     / "plugins/wgo/skills/wgo/references/common/reviewer-authoring.md"
                 ).is_file()
             )
+            self.assertTrue(
+                (
+                    target
+                    / "plugins/wgo/skills/wgo/references/common/cost-estimation-claude.md"
+                ).is_file()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / "plugins/wgo/skills/wgo/references/common/cost-estimation-opencode.md"
+                ).is_file()
+            )
             claude_plugin = target / ".claude/skills/wgo-claude"
             self.assertTrue((claude_plugin / ".claude-plugin/plugin.json").is_file())
             self.assertTrue((claude_plugin / "SKILL.md").is_file())
             self.assertTrue((claude_plugin / "commands/onboard.md").is_file())
             self.assertTrue(
                 (claude_plugin / "references/common/reviewer-contract.md").is_file()
+            )
+            self.assertTrue(
+                (claude_plugin / "references/common/cost-estimation-claude.md").is_file()
             )
             claude_skill = (claude_plugin / "SKILL.md").read_text(encoding="utf-8")
             claude_onboard = (claude_plugin / "commands/onboard.md").read_text(
@@ -167,6 +182,12 @@ class InstallerTests(unittest.TestCase):
             self.assertNotIn("\nuser-invocable:", opencode_skill)
             self.assertTrue(
                 (target / ".opencode/skills/wgo/references/common/reviewer-contract.md").is_file()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / ".opencode/skills/wgo/references/common/cost-estimation-opencode.md"
+                ).is_file()
             )
             self.assertFalse(legacy_command.exists())
             self.assertFalse(legacy_skill.exists())

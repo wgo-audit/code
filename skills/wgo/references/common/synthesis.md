@@ -66,7 +66,9 @@ backlog.
 ## Cost Closeout
 
 After the four audience reports pass synthesis validation, run the complete
-cost-estimation workflow in `cost-estimation.md`. This is the final
+provider workflow selected from `audit-brief.md`: `cost-estimation.md` for
+Codex, `cost-estimation-claude.md` for Claude, or
+`cost-estimation-opencode.md` for OpenCode. This is the final
 end-of-audit phase, before the operationalization question. It creates
 `controls/cost-estimate.md` with frozen calculation evidence; link the control
 from `index.md`, `executive-summary.md`,

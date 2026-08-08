@@ -44,10 +44,13 @@ def frontmatter_dependencies(path: Path) -> list[str]:
     return dependencies
 
 
-def run_cost_fixture(manifest_name: str) -> dict[str, object]:
-    workflow = (SKILL / "references/common/cost-estimation.md").read_text(
-        encoding="utf-8"
-    )
+def run_provider_cost_fixture(
+    workflow_name: str,
+    fixture_name: str,
+    basis_name: str,
+    manifest_name: str = "frozen-manifest.json",
+) -> dict[str, object]:
+    workflow = (SKILL / f"references/common/{workflow_name}").read_text(encoding="utf-8")
     match = re.search(
         r"```sh\npython3 - .*? <<'PY'\n(?P<recipe>.*?)\nPY\n```",
         workflow,
@@ -55,13 +58,13 @@ def run_cost_fixture(manifest_name: str) -> dict[str, object]:
     )
     if not match:
         raise AssertionError("portable cost recipe not found")
-    fixture = SKILL / "references/fixtures/cost-estimation"
+    fixture = SKILL / f"references/fixtures/{fixture_name}"
     result = subprocess.run(
         [
             sys.executable,
             "-",
             str(fixture / manifest_name),
-            str(SKILL / "references/data/api-rate-card-2026-08-07.json"),
+            str(SKILL / f"references/data/{basis_name}"),
         ],
         input=match.group("recipe"),
         text=True,
@@ -71,6 +74,15 @@ def run_cost_fixture(manifest_name: str) -> dict[str, object]:
     if result.returncode:
         raise AssertionError(result.stderr)
     return json.loads(result.stdout)
+
+
+def run_cost_fixture(manifest_name: str) -> dict[str, object]:
+    return run_provider_cost_fixture(
+        "cost-estimation.md",
+        "cost-estimation",
+        "api-rate-card-2026-08-07.json",
+        manifest_name,
+    )
 
 
 class SkillContractTests(unittest.TestCase):
@@ -464,6 +476,74 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(
             {"ses-unrelated"},
             {session["session_id"] for session in manifest["exclusions"]},
+        )
+
+    def test_cost_command_routes_to_distinct_provider_auditors(self) -> None:
+        command = (ROOT / "commands/cost.md").read_text(encoding="utf-8")
+        skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        workflows = {
+            "Codex": "cost-estimation.md",
+            "Claude": "cost-estimation-claude.md",
+            "OpenCode": "cost-estimation-opencode.md",
+        }
+
+        for provider, workflow_name in workflows.items():
+            self.assertIn(f"{provider}: `references/common/{workflow_name}`", command)
+            self.assertTrue((SKILL / f"references/common/{workflow_name}").is_file())
+            self.assertIn(workflow_name, skill)
+        self.assertIn("missing, ambiguous, or\nunsupported", command)
+        self.assertIn("`Unreconciled`", command)
+
+    def test_claude_cost_fixture_collapses_progressive_requests(self) -> None:
+        actual = run_provider_cost_fixture(
+            "cost-estimation-claude.md",
+            "cost-estimation-claude",
+            "anthropic-api-rate-card-2026-08-07.json",
+        )
+
+        self.assertFalse(actual["issues"])
+        self.assertEqual("0.007645", actual["total_cost_usd"])
+        self.assertEqual(
+            {"req-summary", "req-child"},
+            {duplicate["request_id"] for duplicate in actual["duplicates"]},
+        )
+        self.assertEqual(1750, sum(row["input_tokens"] for row in actual["rows"]))
+        self.assertEqual(
+            {"claude-root", "claude-root:agent:worker1"},
+            {row["record_set_id"] for row in actual["rows"]},
+        )
+        fixture = SKILL / "references/fixtures/cost-estimation-claude"
+        manifest = json.loads((fixture / "frozen-manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            {"claude-unrelated"},
+            {item["record_set_id"] for item in manifest["exclusions"]},
+        )
+
+    def test_opencode_cost_fixture_uses_messages_not_session_aggregates(self) -> None:
+        actual = run_provider_cost_fixture(
+            "cost-estimation-opencode.md",
+            "cost-estimation-opencode",
+            "opencode-cost-basis-2026-08-07.json",
+        )
+
+        self.assertFalse(actual["issues"])
+        self.assertFalse(actual["duplicates"])
+        self.assertEqual("0.00790", actual["total_cost_usd"])
+        self.assertEqual(1750, sum(row["input_tokens"] for row in actual["rows"]))
+        self.assertEqual(
+            {"ses-root", "ses-child"},
+            {row["session_id"] for row in actual["rows"]},
+        )
+        message_ids = {
+            message_id for row in actual["rows"] for message_id in row["message_ids"]
+        }
+        self.assertNotIn("msg-cost-work", message_ids)
+        self.assertNotIn("msg-unrelated", message_ids)
+        fixture = SKILL / "references/fixtures/cost-estimation-opencode"
+        manifest = json.loads((fixture / "frozen-manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            {"ses-unrelated"},
+            {item["session_id"] for item in manifest["exclusions"]},
         )
 
     def test_delegated_task_lifecycle_gate_precedes_synthesis(self) -> None:

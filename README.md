@@ -128,7 +128,7 @@ flowchart TB
 1. **Onboard:** establish the product, mandate, evidence boundary, success criteria, and selected reviewers. WGO also discovers project-local reviewer extensions, but never selects one without approval.
 2. **Audit:** inspect one reviewer or run all selected reviewers in coordinator-defined dependency waves; register evidence, ask material questions, and update shared controls.
 3. **Check status:** see completed work, open proof, access blockers, risks, decisions, and remaining reviewers.
-4. **Summarize:** reconcile the whole audit, create decision-grade reports for each audience, and produce a reconciled API-equivalent audit cost estimate.
+4. **Summarize:** reconcile the whole audit, create decision-grade reports for each audience, and produce a reconciled API-equivalent audit cost estimate from Codex, Claude, or OpenCode's own session records.
 5. **Operationalize when justified:** after a completed audit, explicitly request draft operator aids. WGO will not execute them or change a system.
 
 Run a named reviewer when you want focused control. With no reviewer argument,
@@ -217,6 +217,15 @@ An audit should not silently turn into operational work. `wgo:operationalize` is
 When operationalization completes, WGO refreshes `controls/cost-estimate.md`
 through the operator-aid phase. It preserves the earlier audit-only cost
 manifest and excludes both cost-calculation passes from the estimate.
+
+Cost evidence is provider-specific rather than translated into a synthetic
+common log format. Codex uses rollout JSONL request usage, Claude uses its root and
+subagent JSONL transcripts with Anthropic's dated API rate card, and OpenCode
+uses validated session exports with their recorded per-message provider cost.
+Every platform freezes the included session graph before two independent
+calculations. Missing provenance, malformed exports, unknown rates, and
+unexplained zero-cost OpenCode models produce `Unreconciled` or `unpriced`
+results instead of a guessed `$0.00`.
 
 It produces a focused four-part operating packet. These are complementary
 operating perspectives, not variants of one generic runbook:

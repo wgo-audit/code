@@ -25,10 +25,11 @@ reconciliation command, decision queue, or action backlog.
 
 After synthesis validation succeeds, run the complete `wgo:cost` phase before
 asking about operationalization. It must discover and freeze the audit-session
-manifest itself, use two independent Terra-high passes over that manifest, and
-write `controls/cost-estimate.md`. Link that control from `index.md` and the
-three audience reports. A cost result may be `Unreconciled`; do not suppress it
-or replace it with a precise total.
+manifest itself, select the provider workflow from `audit-brief.md`, use its two
+independent verification passes over that manifest, and write
+`controls/cost-estimate.md`. Link that control from `index.md` and the three
+audience reports. A cost result may be `Unreconciled`; do not suppress it or
+replace it with a precise total.
 
 After the summary is complete, ask exactly: `Should I proceed with
 wgo:operationalize?` Do not draft operator aids until the auditor answers yes.

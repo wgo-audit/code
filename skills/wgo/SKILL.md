@@ -29,7 +29,7 @@ source-backed artifacts; do not make the auditor administer a process model.
   operationalization.
 - `wgo:cost` (Codex), `/wgo:cost` (Claude), or `/wgo-cost` (OpenCode):
   calculate a reproducible API-equivalent cost estimate from the completed
-  audit's recorded Codex session JSONL files.
+  audit's provider-native session records.
 - `wgo:operationalize` (Codex), `/wgo:operationalize` (Claude), or
   `/wgo-operationalize` (OpenCode): after explicit approval of a completed synthesis, draft
   a four-part, source-linked, untested operating packet:
@@ -114,16 +114,20 @@ reading an output template that has not been selected.
 - Synthesis: `references/common/synthesis.md`,
   `references/common/evidence-rules.md`, `references/common/reconciliation.md`,
   `references/templates/report-templates.md`, and, after synthesis validation,
-  `references/common/cost-estimation.md`.
-- Cost estimation: `references/common/cost-estimation.md` and
+  the matching cost workflow below.
+- Cost estimation: select exactly one provider workflow from the platform in
+  `audit-brief.md`: Codex `references/common/cost-estimation.md`, Claude
+  `references/common/cost-estimation-claude.md`, or OpenCode
+  `references/common/cost-estimation-opencode.md`; then read
   `references/templates/cost-estimate-template.md`. It is a coordinator phase:
   discover and freeze the audit-session manifest before calculation, run
-  exactly two independent Terra-high verification passes over that same
+  exactly two independent provider-specific verification passes over that same
   manifest, and write `controls/cost-estimate.md` with its frozen calculation
-  evidence.
+  evidence. A missing or unsupported platform is `Unreconciled`, never an
+  invitation to inspect another provider's records.
 - Operationalize: `references/common/operationalization.md`,
   `references/common/evidence-rules.md`, the selected template(s), and then
-  `references/common/cost-estimation.md` to refresh the cost estimate.
+  the same provider cost workflow to refresh the cost estimate.
 
 ## New-Audit Layout
 

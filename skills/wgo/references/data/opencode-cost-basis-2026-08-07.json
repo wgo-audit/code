@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "basis_date": "2026-08-07",
+  "currency": "USD",
+  "pricing_basis": "Exact per-assistant-message cost recorded by the installed OpenCode runtime for its selected provider and model.",
+  "source": "https://opencode.ai/docs/cli/",
+  "source_checked_at": "2026-08-07",
+  "required_message_fields": [
+    "id",
+    "role",
+    "providerID",
+    "modelID",
+    "tokens",
+    "cost"
+  ],
+  "rules": [
+    "Never reconstruct a universal rate card across OpenCode providers or silently substitute another provider's price.",
+    "A positive recorded message cost is replayed exactly and identified as an OpenCode-recorded API-equivalent estimate.",
+    "A recorded zero is unpriced unless the frozen manifest explicitly documents why that provider/model is legitimately zero-cost, such as a local model with no metered API.",
+    "Session aggregate tokens and cost are reconciliation evidence only; never add them to message-level totals.",
+    "Subscription, plan-credit, negotiated, local-compute, and provider-invoice differences remain limitations."
+  ]
+}

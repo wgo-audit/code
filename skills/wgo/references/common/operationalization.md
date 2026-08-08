@@ -58,7 +58,9 @@ owner, authority decision, or proof is required.
 After the selected operator packet is complete, emit this normal progress
 message once: `Operationalization complete; refreshing cost estimate. <!--
 WGO_OPERATIONALIZATION_COMPLETE_COST_PHASE_STARTS -->`. Then rerun the complete
-cost-estimation workflow in `cost-estimation.md` with coverage through
+cost-estimation workflow selected from the platform in `audit-brief.md`:
+`cost-estimation.md` for Codex, `cost-estimation-claude.md` for Claude, or
+`cost-estimation-opencode.md` for OpenCode, with coverage through
 operationalization. Update `controls/cost-estimate.md`, but preserve the frozen
 audit-only manifest and verification outputs. Exclude both cost-calculation
 phases from the estimate itself. If the refreshed result is unreconciled,

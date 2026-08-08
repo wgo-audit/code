@@ -14,14 +14,15 @@ a cent may display as `$0.00`; link its exact machine-readable value.
 |---|---|
 | Coverage | audit or audit-and-operationalization |
 | Reconciliation status | Final or Unreconciled |
-| Rate-card date | |
+| Rate-card/basis date | |
 | Currency | USD |
-| Pricing basis | API-equivalent estimate; not a Codex invoice |
+| Pricing basis | Provider-specific API-equivalent estimate; not a provider invoice |
 
-## Pricing Basis And Rate Card
+## Pricing Basis And Dated Data
 
-State the service tier, context band, rate source, and exact formula. Display
-each rate and calculated cost as `$X.XX`; preserve exact decimals in the linked
+State the provider, dated source, exact formula or recorded-cost rule, and the
+service tier/context/geography where applicable. Display each priced component
+and calculated cost as `$X.XX`; preserve exact decimals in the linked
 calculation evidence.
 
 ## Frozen Manifest And Exclusions
@@ -31,7 +32,7 @@ operationalized coverage, also link the preserved audit-only manifest.
 
 ### Phase Boundaries
 
-| Phase | Session | Marker and JSONL line | Included or excluded |
+| Phase | Session | Marker and record boundary | Included or excluded |
 |---|---|---|---|
 
 ### Session And Request Exclusions
@@ -41,17 +42,21 @@ operationalized coverage, also link the preserved audit-only manifest.
 
 ## Token Totals By Session And Model
 
-| Phase | WGO role/task | Session | Model | Service tier | Context band | Uncached input | Cached input | Output | Reasoning (informational) | Cost |
-|---|---|---|---|---|---|---:|---:|---:|---:|---:|
+| Phase | WGO role/task | Session | Model/provider | Service tier/basis | Uncached/new input | Cache read | Cache write | Cache-write detail | Output | Reasoning (informational) | Cost |
+|---|---|---|---|---|---:|---:|---:|---|---:|---:|---:|
 
-Add one subtotal row per phase. Reasoning is already included in output and is
-never added again. Display priced costs as `$X.XX` from exact evidence.
+Add one subtotal row per phase. State whether the provider reports reasoning as
+part of output or separately. Reasoning is informational and is never added a
+second time to billable output or a provider-recorded cost. For Claude, split
+cache writes into 5-minute and 1-hour tokens in `Cache-write detail`; for
+OpenCode, state that its export does not expose the TTL split. Display priced
+costs as `$X.XX` from exact evidence.
 
 ## Model-By-Model Cost
 
-| Model | Service tier | Context band | Input rate / 1M | Cached-input rate / 1M | Output rate / 1M | Exact-evidence status | Displayed cost |
-|---|---|---|---:|---:|---:|---|---:|
-| **Total** | | | | | | | **$X.XX** |
+| Model/provider | Service tier/context | Rate components or recorded-cost basis | Exact-evidence status | Displayed cost |
+|---|---|---|---|---:|
+| **Total** | | | | **$X.XX** |
 
 Calculate the displayed total by rounding the exact reconciled total, not by
 adding displayed rows. Omit the total when the result is unreconciled.
@@ -63,7 +68,7 @@ disputed session/event when applicable.
 
 ## Limitations
 
-State that this is an API-equivalent estimate rather than a Codex invoice and
-that cost-calculation requests are excluded. List material evidence, schema,
-pricing, attribution, and rounding limitations.
+State that this is an API-equivalent estimate rather than a Codex, Claude, or
+OpenCode/provider invoice and that cost-calculation requests are excluded. List
+material evidence, schema, pricing, attribution, and rounding limitations.
 ```
