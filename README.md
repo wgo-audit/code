@@ -179,13 +179,14 @@ Every completed audit creates a start-here index and reports for three audiences
 | `executive-summary.md` | Business owner | What is the business posture, which decisions need authority now, which evidence is needed, and which corrections should follow? |
 | `product-manager-notes.md` | Product manager | What is implemented, promised, valuable, risky to revenue, or in need of product direction? |
 | `technical-lead-notes.md` | Technical lead | What is known about implementation, operations, maintainability, security, quality, and safe evolution? |
+| `manifest.json` | Tools and report publishers | Machine-readable identity, provenance, evidence boundary, normalized conclusions, and report relationships. |
 
 All audit artifacts live under a dated `_whats-going-on-YYYYMMDD/` root. New
 audits begin with a brief, one checklist, reusable evidence ledger,
 source-access register, shared open items, reviewer reports and compact
-handoffs, selected reviewer-owned artifacts, and the four final reports. The
-source project and external systems remain read-only unless the auditor
-separately authorizes a change.
+handoffs, selected reviewer-owned artifacts, a JSON manifest, and the four final
+reports. The source project and external systems remain read-only unless the
+auditor separately authorizes a change.
 
 ### Detailed Control Artifacts
 
@@ -334,7 +335,17 @@ may add a perspective or replace one core reviewer, but are always optional and
 auditor-approved. Each package carries its own metadata, workers, and optional
 dependency installer. See
 [Building a WGO reviewer](skills/wgo/references/common/reviewer-authoring.md) for the authoring model,
-examples, and validation behavior. The
+the scaffold at
+[`skills/wgo/references/reviewer-scaffold/example-reviewer/`](skills/wgo/references/reviewer-scaffold/example-reviewer/),
+version-bump rules, and validation behavior. Before opening a reviewer PR, run
+the structural package validator:
+
+```bash
+python3 skills/wgo/scripts/validate_reviewer_contract.py \
+  skills/wgo/references/reviewers/<reviewer-id>
+```
+
+The
 [canonical reviewer contract](skills/wgo/references/common/reviewer-contract.md)
 and [internal reviewer blueprint](skills/wgo/references/common/reviewer-blueprint.md)
 define the coordinator-facing details.

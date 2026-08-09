@@ -18,6 +18,7 @@ the compact authoring rules used by WGO itself.
 - [Writing The Reviewer Card](#writing-the-reviewer-card)
 - [Adding Workers](#adding-workers)
 - [Dependencies And Core Substitution](#dependencies-and-core-substitution)
+- [Version Governance](#version-governance)
 - [Optional Analysis Dependencies](#optional-analysis-dependencies)
 - [Discovery And Validation](#discovery-and-validation)
 - [Author Checklist](#author-checklist)
@@ -74,6 +75,15 @@ WGO discovers packages from these paths; there is no separate reviewer
 registry. Installing or updating WGO does not replace the project-local
 extension root.
 
+For a new reviewer, start from the scaffold at:
+
+```text
+skills/wgo/references/reviewer-scaffold/example-reviewer/
+```
+
+Copy it to the destination package folder, rename the folder to the final
+reviewer ID, and update the frontmatter before changing the body.
+
 ## Frontmatter Contract
 
 Every `reviewer.md` begins with YAML frontmatter:
@@ -113,6 +123,28 @@ frontmatter.
 Recommended inputs may name shared evidence and completed `depends_on`
 handoffs only. A same-wave or later reviewer is a downstream consumer, never an
 input to the current run.
+
+## Version Governance
+
+Reviewer versions describe the package contract that produced a finding. Bump a
+reviewer's version when a change can alter evidence collection, outputs,
+completion criteria, dependencies, escalation, or downstream guidance. Examples:
+
+- adding, removing, or materially changing a worker;
+- changing required or conditional outputs;
+- changing `depends_on`, `supersedes`, or `codegraph`;
+- changing completion or escalation conditions; or
+- changing domain-specific evidence rules in the reviewer card.
+
+Do not bump a reviewer version for spelling, formatting, link repair, or a
+shared WGO workflow/template change that affects every reviewer equally without
+changing this package. If a shared change intentionally changes one reviewer
+more than others, bump that reviewer in the same PR and explain why.
+
+On compare and blind-compare runs, WGO records baseline and installed reviewer
+versions. A mismatch is not automatically wrong, but the auditor must accept it
+before the run continues because the comparison may reflect both target changes
+and reviewer-package changes.
 
 ## What Every Reviewer Inherits
 
@@ -269,11 +301,12 @@ validator.
 
 There are three distinct validation layers:
 
-Reviewer-package contract validation is currently coordinator-driven during
-onboarding, with repository tests protecting bundled core reviewers. There is
-no separate `validate_reviewer_contract` executable. An extension's
-`validate_install` script checks only whether its own analysis dependencies are
-ready; it does not validate reviewer metadata or audit quality.
+Reviewer-package contract validation is coordinator-driven during onboarding,
+with repository tests protecting bundled core reviewers. Authors can run
+`skills/wgo/scripts/validate_reviewer_contract.py` before a PR for a quick
+structural check. An extension's `validate_install` script checks only whether
+its own analysis dependencies are ready; it does not validate reviewer metadata
+or audit quality.
 
 ### 1. Package discovery during onboarding
 
@@ -304,8 +337,9 @@ WGO's own test suite validates the bundled core packages, including:
   behavior.
 
 These tests protect core WGO packages. A project-local extension is evaluated
-at onboarding from its package contract; it is not automatically added to
-WGO's repository test suite.
+at onboarding from its package contract and can also be checked with
+`validate_reviewer_contract.py`; it is not automatically added to WGO's
+repository test suite.
 
 ### 3. Generated-audit validation
 
@@ -320,12 +354,33 @@ This validator is optional and structural. It does not judge whether an
 external reviewer is insightful, whether its evidence is sufficient, or
 whether its conclusions are correct.
 
+### 4. Reviewer-package validator
+
+`skills/wgo/scripts/validate_reviewer_contract.py` validates one or more
+reviewer package folders or `reviewer.md` files. It checks required
+frontmatter, version format, required sections, worker line limits and
+boundaries, installer pairs, dependency IDs, `supersedes`, and the single
+reviewer-owned control namespace rule. It does not run the reviewer or inspect
+the audited product.
+
+```bash
+python3 skills/wgo/scripts/validate_reviewer_contract.py \
+  skills/wgo/references/reviewers/security-privacy \
+  --core-id architecture \
+  --core-id security-privacy
+```
+
+For a project-local extension that uses `supersedes`, add `--external`.
+
 ## Author Checklist
 
 Before proposing a reviewer:
 
 - [ ] Give it one distinct, decision-relevant assessment question.
 - [ ] Use a unique kebab-case `id` and valid frontmatter.
+- [ ] Start from `references/reviewer-scaffold/example-reviewer/` when creating
+      a new package.
+- [ ] Bump `version` only when package behavior can affect results.
 - [ ] Declare only true prerequisites in `depends_on`.
 - [ ] Use `supersedes` only for an optional external replacement of one core
       reviewer.
@@ -336,5 +391,6 @@ Before proposing a reviewer:
 - [ ] Define completion, escalation, and downstream boundaries.
 - [ ] Add dependency scripts only when an external tool is genuinely required.
 - [ ] Exercise the reviewer on a representative repository.
+- [ ] Run `validate_reviewer_contract.py` before opening the PR.
 - [ ] Revise it if it misses material evidence, produces duplicate artifacts,
       or pulls irrelevant context.

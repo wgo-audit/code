@@ -46,6 +46,10 @@ supersedes: core-reviewer-id
 `version` identifies the reviewer definition version and starts at `0.1`.
 Increment it whenever reviewer instructions, dependencies, workers, outputs,
 evidence rules, or completion criteria change in a way that can affect results.
+Do not increment a reviewer version for changes only to shared WGO workflow,
+templates, or validators unless the reviewer package itself changes or its
+results would differ because of package-specific instructions. Version changes
+are reviewer-package changes, not audit-run state.
 `depends_on` is required whenever the reviewer has a prerequisite reviewer;
 omit it only when there is no dependency. Dependencies name core reviewer IDs
 and mean both required input and execution order. Recommended inputs may name
@@ -58,6 +62,10 @@ its metadata is malformed, a dependency is unknown, it creates a cycle, or its
 platform validator lacks the matching installer, or its output menu declares
 more than one reviewer-owned control namespace. Report the reason; do not
 silently repair metadata.
+
+Run `skills/wgo/scripts/validate_reviewer_contract.py` against a package before
+opening a reviewer PR. The validator checks structural contract rules only; it
+does not judge whether the reviewer is insightful or complete.
 
 ## Discovery, Approval, And Resolution
 

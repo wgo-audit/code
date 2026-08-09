@@ -99,6 +99,17 @@ workspace without explicit authorization.
 
 ## Decision Usefulness
 
+For every Key Findings row, assign severity, effort, and optional taxonomy from
+the evidence. Severity is consequence-based: `Critical` for exploitable
+security exposure, data-loss risk, or production-failure conditions; `High` for
+material risk likely in normal operation; `Medium` for meaningful contained or
+near-term-unlikely risk; and `Low` for minor cleanup or hardening. Effort is
+the smallest responsible next move: `S` for a local/single-owner proof or
+change, `M` for coordinated multi-file/process work, and `L` for broad
+architecture, governance, migration, or external-party work. Use taxonomy only
+when it is a direct fit, such as CWE, ASVS, SLSA, OSPS, or a project-defined
+control label; otherwise write `none`.
+
 Derive zero or more decision insights from the reviewed evidence. An insight
 names the decision it changes, the causal relationship or conflict behind it,
 the consequence of a wrong choice, and the smallest next proof or action. A

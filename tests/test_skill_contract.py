@@ -4,6 +4,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -90,7 +91,7 @@ class SkillContractTests(unittest.TestCase):
         content = (SKILL / "SKILL.md").read_text(encoding="utf-8")
         self.assertLess(len(content.splitlines()), 180)
         for path in (
-            "audit-brief.md", "audit-checklist.md", "reviewer-reports/<reviewer-id>/",
+            "audit-brief.md", "audit-checklist.md", "manifest.json", "reviewer-reports/<reviewer-id>/",
             "evidence-ledger.md", "source-access-register.md", "open-items.md",
         ):
             self.assertIn(path, content)
@@ -135,6 +136,8 @@ class SkillContractTests(unittest.TestCase):
         onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
         self.assertIn("only work/status view", command)
         self.assertIn("Do not create claims, collection logs, per-type control registers, status", onboarding)
+        self.assertIn("additional manifests", onboarding)
+        self.assertIn("canonical\n`manifest.json` is part of the lean start", onboarding)
 
     def test_onboarding_collects_evidence_sources_and_code_repositories(self) -> None:
         onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
@@ -167,6 +170,13 @@ class SkillContractTests(unittest.TestCase):
         )
         self.assertIn("Evidence and documentation sources", templates)
         self.assertIn("Supporting code repositories", templates)
+        self.assertIn("## Audit Manifest", templates)
+        self.assertIn('"schemaVersion": "1.0.0"', templates)
+        self.assertIn('"subject"', templates)
+        self.assertIn('"relationships"', templates)
+        self.assertIn("Do not carry legacy\nfields", templates)
+        self.assertIn("manifest.json", onboarding)
+        self.assertIn("machine-readable report contract", onboarding)
         self.assertLess(
             onboarding.index("other code repositories support the product"),
             onboarding.index("Ask for every additional evidence or documentation source"),
@@ -602,6 +612,26 @@ class SkillContractTests(unittest.TestCase):
         ):
             self.assertIn(heading, packet)
 
+    def test_manifest_is_a_validated_report_contract(self) -> None:
+        validator = (SKILL / "scripts/validate_audit_structure.py").read_text(encoding="utf-8")
+        synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
+        templates = (SKILL / "references/templates/control-templates.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        normalized_synthesis = " ".join(synthesis.split())
+        normalized_templates = " ".join(templates.split())
+
+        self.assertIn('"manifest.json"', validator)
+        self.assertIn("MANIFEST_TOP_LEVEL", validator)
+        self.assertIn("FULL_SHA_PATTERN", validator)
+        self.assertIn("duplicate conclusion id", validator)
+        self.assertIn("execution.reviewers", validator)
+        self.assertIn("Update `manifest.json` after the four audience reports", synthesis)
+        self.assertIn("Do not invent generator commits, reviewer versions", normalized_synthesis)
+        self.assertIn("schemaVersion`, `report`, `subject`, `audit`", normalized_templates)
+        self.assertIn("subject.id` is the eventual `audits/<subject>/`", templates)
+        self.assertIn("Every Git source commit must be a full 40-character SHA", templates)
+        self.assertIn("Machine-readable identity, provenance, evidence boundary", readme)
+
     def test_source_bounded_diagrams_are_explicit(self) -> None:
         template = (SKILL / "references/templates/detailed-artifact-templates.md").read_text(encoding="utf-8")
         self.assertIn("Source/configuration evidence", template)
@@ -679,6 +709,7 @@ class SkillContractTests(unittest.TestCase):
         reviewer = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
         quality = (SKILL / "references/common/artifact-quality-review.md").read_text(encoding="utf-8")
         synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
+        normalized_synthesis = " ".join(synthesis.split())
         reviewer_template = (
             SKILL / "references/templates/reviewer-report-template.md"
         ).read_text(encoding="utf-8")
@@ -689,7 +720,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Derive zero or more decision insights", reviewer)
         self.assertIn("Do not create an insight to fill a count", reviewer)
         self.assertIn("Do not require or cap candidates", quality)
-        self.assertIn("Do not set\na target number", synthesis)
+        self.assertIn("Do not set a target number", normalized_synthesis)
         self.assertIn("### Decision Insights", reviewer_template)
         self.assertIn("### Decision-Useful Conclusions", synthesis_templates)
 
@@ -697,14 +728,31 @@ class SkillContractTests(unittest.TestCase):
         reviewer = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
         synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
         controls = (SKILL / "references/templates/control-templates.md").read_text(encoding="utf-8")
+        reports = (
+            SKILL / "references/templates/reviewer-report-template.md"
+        ).read_text(encoding="utf-8")
         templates = (SKILL / "references/templates/report-templates.md").read_text(encoding="utf-8")
+        normalized_reviewer = " ".join(reviewer.split())
+        normalized_reports = " ".join(reports.split())
+        normalized_synthesis = " ".join(synthesis.split())
 
         self.assertIn("Type` as the next-move lane", reviewer)
         self.assertIn("Priority orders work within its lane", reviewer)
+        self.assertIn("| Finding | Severity | Effort | Evidence links | Confidence and limitation | Consequence | Taxonomy |", reports)
+        self.assertIn("Severity is `Critical`, `High`, `Medium`, or `Low`", reports)
+        self.assertIn("Effort is `S`, `M`, or `L`", reports)
+        self.assertIn("CWE, ASVS, SLSA, OSPS", normalized_reports)
+        self.assertIn("For every Key Findings row", normalized_reviewer)
+        self.assertIn("Severity is consequence-based", normalized_reviewer)
+        self.assertIn("Effort is the smallest responsible next move", normalized_reviewer)
+        self.assertIn("Use taxonomy only when it is a direct fit", normalized_reviewer)
+        self.assertIn("severity, effort, and taxonomy", normalized_synthesis)
+        self.assertIn("do not collapse severity into open-item priority", normalized_synthesis)
         self.assertIn("### Decisions Now", synthesis)
         self.assertIn("### Evidence Needed", synthesis)
         self.assertIn("### Implementation Corrections", synthesis)
         self.assertIn("Priority orders items within their type", controls)
+        self.assertIn("Preserve reviewer severity, effort, and taxonomy", templates)
         self.assertIn("do not present all P1 items as one queue", templates)
 
     def test_same_root_resume_preserves_open_item_and_decision_ids(self) -> None:
@@ -872,7 +920,7 @@ class SkillContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         code_quality = reviewer_card("code-quality").read_text(encoding="utf-8")
         security = reviewer_card("security-privacy").read_text(encoding="utf-8")
-        assurance = (REVIEWERS / "security-privacy/workers/vulnerability-supply-chain.md").read_text(encoding="utf-8")
+        tooling = (REVIEWERS / "security-privacy/workers/supply-chain-and-tooling.md").read_text(encoding="utf-8")
 
         self.assertIn("Documented outside audited scope; not independently\n   verified.", evidence)
         self.assertIn("smallest useful\nscope expansion", workflow)
@@ -886,7 +934,17 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("runtime-build-surfaces.md", code_quality)
         self.assertIn("public security, privacy, and disclosure claims", security)
         self.assertIn("abuse or\nmisuse controls", security)
-        self.assertIn("consumer verifier", assurance)
+        self.assertIn("consuming verifier", tooling)
+        self.assertIn("vulnerability-class checklist", security)
+        self.assertIn("OSPS Baseline tier", security)
+        self.assertIn("trust-anchor consumption", security)
+        self.assertIn("supply-chain-and-tooling.md", security)
+
+        checklist = (REVIEWERS / "security-privacy/vulnerability-class-checklist.md").read_text(encoding="utf-8")
+        for phrase in ("Canonicalization", "Data minimization", "Product-Class Abuse"):
+            self.assertIn(phrase, checklist)
+        for phrase in ("OpenSSF Scorecard", "OSV-Scanner", "gitleaks", "SBOM", "trust anchor"):
+            self.assertIn(phrase, tooling)
 
     def test_lean_feedback_improvements_are_explicit_and_bounded(self) -> None:
         workflow = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
@@ -898,7 +956,7 @@ class SkillContractTests(unittest.TestCase):
         security = reviewer_card("security-privacy").read_text(encoding="utf-8")
         project_health = reviewer_card("project-health").read_text(encoding="utf-8")
         security_worker = (
-            REVIEWERS / "security-privacy/workers/vulnerability-supply-chain.md"
+            REVIEWERS / "security-privacy/workers/supply-chain-and-tooling.md"
         ).read_text(encoding="utf-8")
 
         self.assertIn("| Finding | Severity | Effort | Evidence links", reports)
@@ -915,14 +973,14 @@ class SkillContractTests(unittest.TestCase):
         for state in ("`production-generated`", "`independently-built`", "`unknown`"):
             self.assertIn(state, code_quality)
 
-        self.assertIn("vulnerability-supply-chain.md", security)
-        self.assertIn("topology-selected vulnerability-class coverage", security)
+        self.assertIn("supply-chain-and-tooling.md", security)
+        self.assertIn("vulnerability-class checklist", security)
         self.assertLessEqual(len(security_worker.splitlines()), 25)
         self.assertIn("do not write audit artifacts", security_worker)
         self.assertIn("do not invoke CodeGraph", security_worker)
-        self.assertIn("OpenSSF Scorecard, OSV-Scanner, or gitleaks", security_worker)
-        self.assertIn("never install tools or modify the project", security_worker)
-        self.assertIn("distinguish `not-run` from no finding", security_worker)
+        self.assertIn("OpenSSF Scorecard", security_worker)
+        self.assertIn("Never install project dependencies", security_worker)
+        self.assertIn("If a tool cannot run", security_worker)
         self.assertIn("route each conflict to the reviewer owning its", project_health)
 
         for reviewer_id in EXPECTED_REVIEWERS:
@@ -1090,6 +1148,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("25 lines or fewer", blueprint)
         self.assertIn("CodeGraph is for code topology only", blueprint)
         self.assertIn("## Shared Evidence Collectors", blueprint)
+        self.assertIn("version: 0.1", blueprint)
 
     def test_external_reviewer_contract_is_self_contained_and_coordinator_owned(self) -> None:
         contract = (SKILL / "references/common/reviewer-contract.md").read_text(encoding="utf-8")
@@ -1105,6 +1164,8 @@ class SkillContractTests(unittest.TestCase):
         ):
             self.assertIn(field, contract)
         self.assertIn("`version` identifies the reviewer definition version", normalized)
+        self.assertIn("Do not increment a reviewer version for changes only to shared WGO workflow", normalized)
+        self.assertIn("validate_reviewer_contract.py", contract)
         self.assertIn(
             "`depends_on` is required whenever the reviewer has a prerequisite reviewer",
             normalized,
@@ -1161,6 +1222,7 @@ class SkillContractTests(unittest.TestCase):
         )
         self.assertIn("selected reviewer IDs and versions", normalized_expectations)
         self.assertIn("change in a way that can affect results", contract)
+        self.assertIn("shared WGO workflow", contract)
 
     def test_public_docs_explain_cross_agent_resume_and_reviewer_extensions(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -1190,13 +1252,17 @@ class SkillContractTests(unittest.TestCase):
         )
 
         self.assertIn("# Building A WGO Reviewer", guide)
+        self.assertIn("references/reviewer-scaffold/example-reviewer/", guide)
         self.assertIn("## Frontmatter Contract", guide)
+        self.assertIn("## Version Governance", guide)
         self.assertIn("## What Every Reviewer Inherits", guide)
         self.assertIn("## What Makes A Reviewer Unique", guide)
         self.assertIn("## Discovery And Validation", guide)
         self.assertIn("`depends_on`", guide)
         self.assertIn("`supersedes`", guide)
-        self.assertIn("no separate `validate_reviewer_contract` executable", guide)
+        self.assertIn("validate_reviewer_contract.py", guide)
+        self.assertIn("Bump a\nreviewer's version", guide)
+        self.assertIn("Do not bump a reviewer version for spelling", guide)
         self.assertIn("validator is optional and structural", normalized_guide)
         self.assertIn(
             "(reviewer-contract.md)",
@@ -1206,6 +1272,67 @@ class SkillContractTests(unittest.TestCase):
             "references/common/reviewer-authoring.md",
             (SKILL / "SKILL.md").read_text(encoding="utf-8"),
         )
+        self.assertIn("skills/wgo/references/reviewer-scaffold/example-reviewer/", readme)
+        self.assertIn("validate_reviewer_contract.py", readme)
+
+    def test_reviewer_scaffold_and_contract_validator_are_pr_ready(self) -> None:
+        validator = SKILL / "scripts/validate_reviewer_contract.py"
+        scaffold = SKILL / "references/reviewer-scaffold/example-reviewer"
+        readme = (scaffold.parent / "README.md").read_text(encoding="utf-8")
+        reviewer = (scaffold / "reviewer.md").read_text(encoding="utf-8")
+        worker = (scaffold / "workers/example-evidence-slice.md").read_text(encoding="utf-8")
+
+        self.assertTrue(validator.is_file())
+        self.assertTrue(scaffold.is_dir())
+        self.assertIn("Copy `example-reviewer/`", readme)
+        self.assertIn("id: example-reviewer", reviewer)
+        self.assertIn("version: 0.1", reviewer)
+        self.assertIn("do not invoke CodeGraph", worker)
+        self.assertIn("do not delegate", worker)
+
+        ok = subprocess.run(
+            [sys.executable, str(validator), str(scaffold)],
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual("", ok.stderr)
+        self.assertEqual(0, ok.returncode)
+
+        with tempfile.TemporaryDirectory() as temp:
+            bad = Path(temp) / "bad-reviewer"
+            bad.mkdir()
+            (bad / "reviewer.md").write_text(
+                "---\n"
+                "id: bad-reviewer\n"
+                "name: Bad Reviewer\n"
+                "summary: Broken on purpose?\n"
+                "version: draft\n"
+                "codegraph: maybe\n"
+                "depends_on:\n"
+                "  - missing-core\n"
+                "---\n"
+                "# Reviewer: Bad Reviewer\n",
+                encoding="utf-8",
+            )
+            failed = subprocess.run(
+                [
+                    sys.executable,
+                    str(validator),
+                    str(bad),
+                    "--core-id",
+                    "architecture",
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertNotEqual(0, failed.returncode)
+        self.assertIn("version must be numeric", failed.stderr)
+        self.assertIn("invalid codegraph value", failed.stderr)
+        self.assertIn("unknown dependency: missing-core", failed.stderr)
+        self.assertIn("missing required section", failed.stderr)
 
 
 if __name__ == "__main__":

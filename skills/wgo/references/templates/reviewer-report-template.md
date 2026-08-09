@@ -16,8 +16,14 @@ State what was examined and only material gaps. Link an open item or source-acce
 
 ## Key Findings
 
-| Finding | Severity | Effort | Evidence links | Confidence and limitation | Consequence |
-|---|---|---|---|---|---|
+| Finding | Severity | Effort | Evidence links | Confidence and limitation | Consequence | Taxonomy |
+|---|---|---|---|---|---|---|
+
+Severity is `Critical`, `High`, `Medium`, or `Low`, based on evidenced
+consequence. Effort is `S`, `M`, or `L`, based on the smallest responsible next
+proof or correction. Use `Taxonomy` only when a stable label such as CWE, ASVS,
+SLSA, OSPS, or project-defined control vocabulary directly fits; otherwise
+write `none`.
 
 ## Mandate-Relevant Strengths
 

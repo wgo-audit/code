@@ -1,7 +1,7 @@
 ---
 id: security-privacy
 name: Security and Privacy
-summary: What material identity, credential, exposure, privacy, PII, and operating-control risks are evidenced?
+summary: What material identity, credential, exposure, privacy, PII, supply-chain, and operating-control risks are evidenced?
 version: 0.2
 codegraph: optional
 depends_on:
@@ -15,14 +15,22 @@ depends_on:
 Assess evidence-bounded security and privacy posture without copying secrets or
 claiming an unperformed penetration test or compliance certification. Reconcile
 material public security, privacy, and disclosure claims with the available
-implementation and operational evidence.
+implementation and operational evidence. Answer the applicable
+vulnerability-class checklist items selected from topology. For every trust
+anchor the source produces, such as signatures, checksums, or provenance,
+locate its consuming verifier; absent or unclear verifier use is a finding.
+Identify material product-class abuse paths and assess project countermeasures
+as security controls. When the brief declares an OSPS Baseline tier, assess
+against that tier without claiming certification.
 
 ## Output Menu
 
 | Category | Output and canonical path | Trigger |
 |---|---|---|
 | Required | Security/privacy posture | Always, in `reviewer-reports/security-privacy/report.md` |
+| Required | Vulnerability-class checklist verdicts, using `vulnerability-class-checklist.md` | Always, in the report; mark non-applicable classes with reason |
 | Conditional | Secret surface, credential exposure, privilege/offboarding, or trust/data-flow view in `controls/security/` | A material secret, identity, privilege, data, or boundary question is found |
+| Conditional | Supply-chain and tooling results view: `controls/security/supply-chain-and-tooling.md` | Tooling, dependency, release-provenance, SBOM, or verifier evidence is material |
 | Conditional | Edge exposure view: `controls/security/diagrams/edge-exposure-view.md` | Detailed work has approved DNS, TLS, ingress, WAF, or reachability evidence |
 | Not owned | Business continuity ownership and technical model | Link Business Continuity and Architecture |
 
@@ -51,18 +59,22 @@ writes artifacts; collectors never call CodeGraph or shared collectors.
 |---|---|---|
 | Identity, secrets, and privacy boundaries | Authn/authz, service identity, secret consumers/metadata, PII/data boundaries, and lifecycle controls | `workers/identity-secrets-data-boundaries.md` |
 | Edge and runtime exposure | Ingress, DNS/TLS/WAF declarations, network paths, admin/public routes, and runtime exposure configuration | `workers/edge-runtime-exposure.md` |
-| Vulnerability and supply-chain coverage | Topology-selected vulnerability classes, dependency/provenance evidence, trust-anchor consumption, and authorized security-tool results | `workers/vulnerability-supply-chain.md` |
+| Supply chain and tooling | Authorized local Scorecard, OSV, and secret-scanner runs; dependency, release-provenance, SBOM, and trust-anchor consumption evidence | `workers/supply-chain-and-tooling.md` |
 
 ## Completion Criteria
 
-State material exposed surfaces, topology-selected vulnerability-class coverage,
-trust-anchor verifier paths, security-tool execution or limitation, selected
-controls, and closure routes without secret values or unbounded claims.
+State material exposed surfaces, checklist verdicts, claim reconciliation,
+trust-anchor consumption, abuse-control position, strongest security assets for
+the mandate outcome, evidence limits, selected controls, and closure routes
+without secret values or unbounded claims.
 
 ## Escalation Conditions
 
 - A credential-like surface may have production privilege or unknown revocation.
 - PII, tenant, or privilege boundaries are unknown on a critical path.
+- A produced trust anchor has no locatable verifier on a consumption path.
+- A public security, privacy, or disclosure claim materially contradicts
+  implementation evidence.
 
 ## Cross-Reviewer Links
 
