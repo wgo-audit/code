@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -856,6 +859,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("25 lines or fewer", blueprint)
         self.assertIn("CodeGraph is for code topology only", blueprint)
         self.assertIn("## Shared Evidence Collectors", blueprint)
+        self.assertIn("version: 0.1", blueprint)
 
     def test_external_reviewer_contract_is_self_contained_and_coordinator_owned(self) -> None:
         contract = (SKILL / "references/common/reviewer-contract.md").read_text(encoding="utf-8")
@@ -871,6 +875,8 @@ class SkillContractTests(unittest.TestCase):
         ):
             self.assertIn(field, contract)
         self.assertIn("`version` identifies the reviewer definition version", normalized)
+        self.assertIn("Do not increment a reviewer version for changes only to shared WGO workflow", normalized)
+        self.assertIn("validate_reviewer_contract.py", contract)
         self.assertIn(
             "`depends_on` is required whenever the reviewer has a prerequisite reviewer",
             normalized,
@@ -927,6 +933,7 @@ class SkillContractTests(unittest.TestCase):
         )
         self.assertIn("selected reviewer IDs and versions", normalized_expectations)
         self.assertIn("change in a way that can affect results", contract)
+        self.assertIn("shared WGO workflow", contract)
 
     def test_public_docs_explain_cross_agent_resume_and_reviewer_extensions(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -956,13 +963,17 @@ class SkillContractTests(unittest.TestCase):
         )
 
         self.assertIn("# Building A WGO Reviewer", guide)
+        self.assertIn("references/reviewer-scaffold/example-reviewer/", guide)
         self.assertIn("## Frontmatter Contract", guide)
+        self.assertIn("## Version Governance", guide)
         self.assertIn("## What Every Reviewer Inherits", guide)
         self.assertIn("## What Makes A Reviewer Unique", guide)
         self.assertIn("## Discovery And Validation", guide)
         self.assertIn("`depends_on`", guide)
         self.assertIn("`supersedes`", guide)
-        self.assertIn("no separate `validate_reviewer_contract` executable", guide)
+        self.assertIn("validate_reviewer_contract.py", guide)
+        self.assertIn("Bump a\nreviewer's version", guide)
+        self.assertIn("Do not bump a reviewer version for spelling", guide)
         self.assertIn("validator is optional and structural", normalized_guide)
         self.assertIn(
             "(reviewer-contract.md)",
@@ -972,6 +983,67 @@ class SkillContractTests(unittest.TestCase):
             "references/common/reviewer-authoring.md",
             (SKILL / "SKILL.md").read_text(encoding="utf-8"),
         )
+        self.assertIn("skills/wgo/references/reviewer-scaffold/example-reviewer/", readme)
+        self.assertIn("validate_reviewer_contract.py", readme)
+
+    def test_reviewer_scaffold_and_contract_validator_are_pr_ready(self) -> None:
+        validator = SKILL / "scripts/validate_reviewer_contract.py"
+        scaffold = SKILL / "references/reviewer-scaffold/example-reviewer"
+        readme = (scaffold.parent / "README.md").read_text(encoding="utf-8")
+        reviewer = (scaffold / "reviewer.md").read_text(encoding="utf-8")
+        worker = (scaffold / "workers/example-evidence-slice.md").read_text(encoding="utf-8")
+
+        self.assertTrue(validator.is_file())
+        self.assertTrue(scaffold.is_dir())
+        self.assertIn("Copy `example-reviewer/`", readme)
+        self.assertIn("id: example-reviewer", reviewer)
+        self.assertIn("version: 0.1", reviewer)
+        self.assertIn("do not invoke CodeGraph", worker)
+        self.assertIn("do not delegate", worker)
+
+        ok = subprocess.run(
+            [sys.executable, str(validator), str(scaffold)],
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual("", ok.stderr)
+        self.assertEqual(0, ok.returncode)
+
+        with tempfile.TemporaryDirectory() as temp:
+            bad = Path(temp) / "bad-reviewer"
+            bad.mkdir()
+            (bad / "reviewer.md").write_text(
+                "---\n"
+                "id: bad-reviewer\n"
+                "name: Bad Reviewer\n"
+                "summary: Broken on purpose?\n"
+                "version: draft\n"
+                "codegraph: maybe\n"
+                "depends_on:\n"
+                "  - missing-core\n"
+                "---\n"
+                "# Reviewer: Bad Reviewer\n",
+                encoding="utf-8",
+            )
+            failed = subprocess.run(
+                [
+                    sys.executable,
+                    str(validator),
+                    str(bad),
+                    "--core-id",
+                    "architecture",
+                ],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertNotEqual(0, failed.returncode)
+        self.assertIn("version must be numeric", failed.stderr)
+        self.assertIn("invalid codegraph value", failed.stderr)
+        self.assertIn("unknown dependency: missing-core", failed.stderr)
+        self.assertIn("missing required section", failed.stderr)
 
 
 if __name__ == "__main__":
