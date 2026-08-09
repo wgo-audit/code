@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from dataclasses import dataclass, field
@@ -13,6 +14,7 @@ from pathlib import Path
 BASE_REQUIRED = (
     "audit-brief.md",
     "audit-checklist.md",
+    "manifest.json",
     "evidence/evidence-ledger.md",
     "evidence/source-access-register.md",
     "controls/open-items.md",
@@ -113,6 +115,26 @@ OPEN_ITEM_STATUSES = {
 }
 OPEN_ITEM_TYPES = {"risk", "decision-needed", "verification", "action"}
 OPEN_ITEM_PRIORITIES = {"P1", "P2", "P3"}
+MANIFEST_TOP_LEVEL = {
+    "schemaVersion",
+    "report",
+    "subject",
+    "audit",
+    "evidence",
+    "execution",
+    "results",
+    "relationships",
+}
+MANIFEST_REVIEWER_STATUSES = {
+    "completed",
+    "partial",
+    "not-run",
+    "failed",
+    "not-applicable",
+}
+MANIFEST_CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
+MANIFEST_SEVERITY_VALUES = {"critical", "high", "medium", "low"}
+FULL_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$", re.I)
 CHECKLIST_STATES = {
     "confirmed",
     "not-started",
@@ -204,6 +226,14 @@ def read_text(path: Path, result: Result) -> str:
         return ""
 
 
+def read_json(path: Path, root: Path, result: Result) -> object | None:
+    try:
+        return json.loads(read_text(path, result))
+    except json.JSONDecodeError as exc:
+        result.error(f"{path.relative_to(root)} has invalid JSON: {exc.msg}")
+        return None
+
+
 def check_required(root: Path, paths: tuple[str, ...], result: Result) -> None:
     for relative in paths:
         if not (root / relative).is_file():
@@ -278,6 +308,107 @@ def check_table_contracts(root: Path, result: Result) -> None:
                         f"{relative}:{line_number} has invalid checklist state: "
                         f"{cells[1] or 'missing'}"
                     )
+
+
+def contains_placeholder(value: object) -> bool:
+    if isinstance(value, str):
+        return bool(re.search(r"\b(?:TODO|TBD)\b", value, re.I))
+    if isinstance(value, list):
+        return any(contains_placeholder(item) for item in value)
+    if isinstance(value, dict):
+        return any(contains_placeholder(item) for item in value.values())
+    return False
+
+
+def check_manifest(root: Path, result: Result) -> None:
+    path = root / "manifest.json"
+    if not path.is_file():
+        return
+    data = read_json(path, root, result)
+    if not isinstance(data, dict):
+        result.error("manifest.json must contain a JSON object")
+        return
+
+    unknown = sorted(set(data) - MANIFEST_TOP_LEVEL)
+    if unknown:
+        result.error(f"manifest.json has unknown top-level keys: {', '.join(unknown)}")
+    for key in sorted(MANIFEST_TOP_LEVEL):
+        if key not in data:
+            result.error(f"manifest.json missing required top-level key: {key}")
+    if contains_placeholder(data):
+        result.error("manifest.json contains unresolved TODO/TBD placeholder text")
+
+    report = data.get("report") if isinstance(data.get("report"), dict) else {}
+    entrypoint = report.get("entrypoint") if isinstance(report, dict) else None
+    if entrypoint and not (root / str(entrypoint)).is_file():
+        # Before synthesis, entrypoint may be planned but not created yet. Warn only
+        # when final reports are present enough that the entrypoint should exist.
+        if any((root / final).is_file() for final in FINAL_REQUIRED):
+            result.error(f"manifest.json report.entrypoint does not exist: {entrypoint}")
+
+    evidence = data.get("evidence") if isinstance(data.get("evidence"), dict) else {}
+    sources = evidence.get("sources", []) if isinstance(evidence, dict) else []
+    if sources is not None and not isinstance(sources, list):
+        result.error("manifest.json evidence.sources must be an array")
+        sources = []
+    for index, source in enumerate(sources):
+        if not isinstance(source, dict):
+            result.error(f"manifest.json evidence.sources[{index}] must be an object")
+            continue
+        if source.get("kind") == "git-repository":
+            commit = source.get("commit")
+            if commit is not None and not (
+                isinstance(commit, str) and FULL_SHA_PATTERN.fullmatch(commit)
+            ):
+                result.error(
+                    f"manifest.json evidence.sources[{index}].commit must be a full Git SHA"
+                )
+
+    execution = data.get("execution") if isinstance(data.get("execution"), dict) else {}
+    reviewers = execution.get("reviewers", []) if isinstance(execution, dict) else []
+    if reviewers is not None and not isinstance(reviewers, list):
+        result.error("manifest.json execution.reviewers must be an array")
+        reviewers = []
+    for index, reviewer in enumerate(reviewers):
+        if not isinstance(reviewer, dict):
+            result.error(f"manifest.json execution.reviewers[{index}] must be an object")
+            continue
+        for field in ("id", "version", "status"):
+            if field not in reviewer:
+                result.error(
+                    f"manifest.json execution.reviewers[{index}] missing field: {field}"
+                )
+        status = reviewer.get("status")
+        if status is not None and status not in MANIFEST_REVIEWER_STATUSES:
+            result.error(
+                f"manifest.json execution.reviewers[{index}].status is invalid: {status}"
+            )
+
+    results = data.get("results") if isinstance(data.get("results"), dict) else {}
+    conclusions = results.get("conclusions", []) if isinstance(results, dict) else []
+    if conclusions is not None and not isinstance(conclusions, list):
+        result.error("manifest.json results.conclusions must be an array")
+        conclusions = []
+    conclusion_ids: set[str] = set()
+    for index, conclusion in enumerate(conclusions):
+        if not isinstance(conclusion, dict):
+            result.error(f"manifest.json results.conclusions[{index}] must be an object")
+            continue
+        conclusion_id = conclusion.get("id")
+        if conclusion_id in conclusion_ids:
+            result.error(f"manifest.json duplicate conclusion id: {conclusion_id}")
+        if isinstance(conclusion_id, str):
+            conclusion_ids.add(conclusion_id)
+        confidence = conclusion.get("confidence")
+        if confidence is not None and confidence not in MANIFEST_CONFIDENCE_VALUES:
+            result.error(
+                f"manifest.json results.conclusions[{index}].confidence is invalid: {confidence}"
+            )
+        severity = conclusion.get("severity")
+        if severity is not None and severity not in MANIFEST_SEVERITY_VALUES:
+            result.error(
+                f"manifest.json results.conclusions[{index}].severity is invalid: {severity}"
+            )
 
 
 def check_id_formats(root: Path, result: Result) -> None:
@@ -503,6 +634,7 @@ def validate(
     check_required(root, BASE_REQUIRED, result)
     if require_final:
         check_required(root, FINAL_REQUIRED, result)
+    check_manifest(root, result)
     check_table_contracts(root, result)
     check_id_formats(root, result)
     check_final_reports(root, result)

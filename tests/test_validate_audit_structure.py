@@ -25,6 +25,54 @@ class ValidateAuditStructureTests(unittest.TestCase):
         self.root.mkdir()
         self.write("audit-brief.md")
         self.write(
+            "manifest.json",
+            '{\n'
+            '  "schemaVersion": "1.0.0",\n'
+            '  "report": {\n'
+            '    "id": "acme-2026-07-12-transition-control",\n'
+            '    "title": "Acme Transition Control Audit",\n'
+            '    "generatedAt": null,\n'
+            '    "language": "en",\n'
+            '    "entrypoint": "index.md"\n'
+            '  },\n'
+            '  "subject": {\n'
+            '    "id": "acme",\n'
+            '    "name": "Acme",\n'
+            '    "kind": "software-project"\n'
+            '  },\n'
+            '  "audit": {\n'
+            '    "type": "transition-control",\n'
+            '    "mode": "unknown",\n'
+            '    "depth": "deep"\n'
+            '  },\n'
+            '  "evidence": {\n'
+            '    "cutoff": "2026-07-12",\n'
+            '    "sources": [],\n'
+            '    "accessBoundary": { "level": "unknown" },\n'
+            '    "limitations": []\n'
+            '  },\n'
+            '  "execution": {\n'
+            '    "generator": {\n'
+            '      "name": "wgo-audit",\n'
+            '      "repository": "wgo-audit/code",\n'
+            '      "version": null,\n'
+            '      "commit": null\n'
+            '    },\n'
+            '    "reviewers": []\n'
+            '  },\n'
+            '  "results": {\n'
+            '    "headline": null,\n'
+            '    "conclusions": []\n'
+            '  },\n'
+            '  "relationships": {\n'
+            '    "baseline": null,\n'
+            '    "previousAudit": null,\n'
+            '    "comparesTo": [],\n'
+            '    "supersedes": null\n'
+            '  }\n'
+            '}\n',
+        )
+        self.write(
             "audit-checklist.md",
             "# Audit Checklist\n\n"
             "| Work item | State | Next action | Recommended next reviewer | Factual completion condition |\n"
@@ -79,6 +127,45 @@ class ValidateAuditStructureTests(unittest.TestCase):
         (self.root / "audit-brief.md").unlink()
         result = validator.validate(self.root)
         self.assertIn("Missing required file: audit-brief.md", result.errors)
+
+    def test_manifest_contract_is_enforced(self) -> None:
+        self.write(
+            "manifest.json",
+            '{\n'
+            '  "schemaVersion": "1.0.0",\n'
+            '  "asset": "legacy",\n'
+            '  "report": { "entrypoint": "missing.md" },\n'
+            '  "subject": {},\n'
+            '  "audit": {},\n'
+            '  "evidence": {\n'
+            '    "sources": [\n'
+            '      { "kind": "git-repository", "commit": "abc123" }\n'
+            '    ]\n'
+            '  },\n'
+            '  "execution": {\n'
+            '    "reviewers": [\n'
+            '      { "id": "architecture", "version": null, "status": "done" }\n'
+            '    ]\n'
+            '  },\n'
+            '  "results": {\n'
+            '    "conclusions": [\n'
+            '      { "id": "same", "confidence": "certain", "severity": "urgent" },\n'
+            '      { "id": "same" }\n'
+            '    ]\n'
+            '  },\n'
+            '  "relationships": { "baseline": "TODO" }\n'
+            '}\n',
+        )
+        self.write("index.md")
+
+        errors = validator.validate(self.root).errors
+        self.assertTrue(any("unknown top-level keys: asset" in error for error in errors))
+        self.assertTrue(any("unresolved TODO/TBD placeholder" in error for error in errors))
+        self.assertTrue(any("commit must be a full Git SHA" in error for error in errors))
+        self.assertTrue(any("status is invalid: done" in error for error in errors))
+        self.assertTrue(any("duplicate conclusion id: same" in error for error in errors))
+        self.assertTrue(any("confidence is invalid: certain" in error for error in errors))
+        self.assertTrue(any("severity is invalid: urgent" in error for error in errors))
 
     def test_old_status_file_is_not_required(self) -> None:
         self.write_reviewer()

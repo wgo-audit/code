@@ -104,6 +104,7 @@ reading an output template that has not been selected.
 _whats-going-on-YYYYMMDD/
   audit-brief.md
   audit-checklist.md
+  manifest.json
   documentation/
     catalog.md
   evidence/

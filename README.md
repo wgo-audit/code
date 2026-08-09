@@ -163,13 +163,14 @@ Every completed audit creates a start-here index and reports for three audiences
 | `executive-summary.md` | Business owner | What is the business posture, which decisions need authority now, which evidence is needed, and which corrections should follow? |
 | `product-manager-notes.md` | Product manager | What is implemented, promised, valuable, risky to revenue, or in need of product direction? |
 | `technical-lead-notes.md` | Technical lead | What is known about implementation, operations, maintainability, security, quality, and safe evolution? |
+| `manifest.json` | Tools and report publishers | Machine-readable identity, provenance, evidence boundary, normalized conclusions, and report relationships. |
 
 All audit artifacts live under a dated `_whats-going-on-YYYYMMDD/` root. New
 audits begin with a brief, one checklist, reusable evidence ledger,
 source-access register, shared open items, reviewer reports and compact
-handoffs, selected reviewer-owned artifacts, and the four final reports. The
-source project and external systems remain read-only unless the auditor
-separately authorizes a change.
+handoffs, selected reviewer-owned artifacts, a JSON manifest, and the four final
+reports. The source project and external systems remain read-only unless the
+auditor separately authorizes a change.
 
 ### Detailed Control Artifacts
 

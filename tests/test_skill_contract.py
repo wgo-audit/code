@@ -52,7 +52,7 @@ class SkillContractTests(unittest.TestCase):
         content = (SKILL / "SKILL.md").read_text(encoding="utf-8")
         self.assertLess(len(content.splitlines()), 180)
         for path in (
-            "audit-brief.md", "audit-checklist.md", "reviewer-reports/<reviewer-id>/",
+            "audit-brief.md", "audit-checklist.md", "manifest.json", "reviewer-reports/<reviewer-id>/",
             "evidence-ledger.md", "source-access-register.md", "open-items.md",
         ):
             self.assertIn(path, content)
@@ -98,6 +98,8 @@ class SkillContractTests(unittest.TestCase):
         onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
         self.assertIn("only work/status view", command)
         self.assertIn("Do not create claims, collection logs, per-type control registers, status", onboarding)
+        self.assertIn("additional manifests", onboarding)
+        self.assertIn("canonical\n`manifest.json` is part of the lean start", onboarding)
 
     def test_onboarding_collects_evidence_sources_and_code_repositories(self) -> None:
         onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
@@ -130,6 +132,13 @@ class SkillContractTests(unittest.TestCase):
         )
         self.assertIn("Evidence and documentation sources", templates)
         self.assertIn("Supporting code repositories", templates)
+        self.assertIn("## Audit Manifest", templates)
+        self.assertIn('"schemaVersion": "1.0.0"', templates)
+        self.assertIn('"subject"', templates)
+        self.assertIn('"relationships"', templates)
+        self.assertIn("Do not carry legacy\nfields", templates)
+        self.assertIn("manifest.json", onboarding)
+        self.assertIn("machine-readable report contract", onboarding)
         self.assertLess(
             onboarding.index("other code repositories support the product"),
             onboarding.index("Ask for every additional evidence or documentation source"),
@@ -381,6 +390,26 @@ class SkillContractTests(unittest.TestCase):
             "## Material Unknowns And Access Limits", "## Reuse Guidance",
         ):
             self.assertIn(heading, packet)
+
+    def test_manifest_is_a_validated_report_contract(self) -> None:
+        validator = (SKILL / "scripts/validate_audit_structure.py").read_text(encoding="utf-8")
+        synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
+        templates = (SKILL / "references/templates/control-templates.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        normalized_synthesis = " ".join(synthesis.split())
+        normalized_templates = " ".join(templates.split())
+
+        self.assertIn('"manifest.json"', validator)
+        self.assertIn("MANIFEST_TOP_LEVEL", validator)
+        self.assertIn("FULL_SHA_PATTERN", validator)
+        self.assertIn("duplicate conclusion id", validator)
+        self.assertIn("execution.reviewers", validator)
+        self.assertIn("Update `manifest.json` after the four audience reports", synthesis)
+        self.assertIn("Do not invent generator commits, reviewer versions", normalized_synthesis)
+        self.assertIn("schemaVersion`, `report`, `subject`, `audit`", normalized_templates)
+        self.assertIn("subject.id` is the eventual `audits/<subject>/`", templates)
+        self.assertIn("Every Git source commit must be a full 40-character SHA", templates)
+        self.assertIn("Machine-readable identity, provenance, evidence boundary", readme)
 
     def test_source_bounded_diagrams_are_explicit(self) -> None:
         template = (SKILL / "references/templates/detailed-artifact-templates.md").read_text(encoding="utf-8")
