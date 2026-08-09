@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "provider": "opencode",
+  "coverage": "audit",
+  "root_session_id": "ses-root",
+  "pricing_basis": {
+    "basis_file": "../../data/opencode-cost-basis-2026-08-07.json",
+    "opencode_version": "1.18.11",
+    "zero_cost_authorizations": []
+  },
+  "phase_policy": {
+    "included": ["unattributed", "onboarding", "audit", "summary"],
+    "excluded": ["cost-estimation"],
+    "markers": {
+      "WGO_PHASE_ONBOARDING_START": "onboarding",
+      "WGO_PHASE_AUDIT_START": "audit",
+      "WGO_PHASE_SUMMARY_START": "summary",
+      "WGO_AUDIT_COMPLETE_COST_PHASE_STARTS": "cost-estimation",
+      "WGO_PHASE_OPERATIONALIZATION_START": "operationalization",
+      "WGO_OPERATIONALIZATION_COMPLETE_COST_PHASE_STARTS": "cost-estimation"
+    }
+  },
+  "sessions": [
+    {
+      "session_id": "ses-root",
+      "export_path": "root.json",
+      "export_sha256": "918bd03d14acf1d2e7bce46513e0c36abababb8a7393a81b6e393309d122919a",
+      "wgo_role_task_name": "OpenCode audit coordinator",
+      "phase": "from-markers",
+      "parent_session_id": null,
+      "root_relationship": "root",
+      "decision": "included",
+      "rationale": "Fixture root through the explicit marker message.",
+      "cutoff": {"marker": "WGO_AUDIT_COMPLETE_COST_PHASE_STARTS", "message_id": "msg-cost-boundary"},
+      "aggregate_reconciliation": "partial-export-not-applicable",
+      "usage_schema": "opencode-export-assistant-info-v1"
+    },
+    {
+      "session_id": "ses-child",
+      "export_path": "child.json",
+      "export_sha256": "dc2b7d63ccdedd9eb9ab5ae987b82617ce8539c79c6cb264fb2681dfed4e91da",
+      "wgo_role_task_name": "wgo reviewer: architecture",
+      "phase": "audit",
+      "parent_session_id": "ses-root",
+      "root_relationship": "descendant",
+      "decision": "included",
+      "rationale": "Completed parent task and matching child parentID.",
+      "provenance": {"parent_message_id": "msg-spawn", "task_part_id": "prt-task", "call_id": "call-task", "terminal_state": "completed"},
+      "cutoff": {"message_id": "msg-child-last"},
+      "aggregate_reconciliation": "full-export",
+      "usage_schema": "opencode-export-assistant-info-v1"
+    }
+  ],
+  "exclusions": [
+    {
+      "session_id": "ses-unrelated",
+      "export_path": "unrelated.json",
+      "decision": "excluded",
+      "rationale": "No task/parent path from ses-root."
+    }
+  ]
+}

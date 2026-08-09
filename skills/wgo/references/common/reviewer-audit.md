@@ -3,6 +3,11 @@
 Use for `wgo:audit <reviewer-id>`. A reviewer is a bounded evidence-to-artifact loop,
 not a parallel state system.
 
+Before doing reviewer or audit-coordination work for this invocation, emit this
+normal progress message once: `Starting reviewer execution. <!--
+WGO_PHASE_AUDIT_START -->`. The HTML comment is a persisted cost-attribution
+marker, not audit evidence.
+
 ## Inputs And Output Selection
 
 Read `audit-brief.md`, the reviewer card, its relevant predecessor handoffs,
@@ -113,6 +118,14 @@ Do not create an insight to fill a count. Combine facts that change the same
 decision; retain every independent material decision rather than imposing a
 maximum.
 
+Classify every report finding by consequence-based severity (`High`, `Medium`,
+or `Low`) and smallest credible corrective effort (`S`, `M`, or `L`). Use the
+confidence/limitation column to bound either classification. Severity is impact,
+effort is size, and open-item priority remains urgency within its next-move lane.
+`High` can materially block or harm the mandate outcome; `Medium` materially
+degrades it; `Low` is bounded and non-blocking. `S` is localized, `M` crosses
+components or needs coordinated validation, and `L` spans major surfaces or owners.
+
 For a material open item, use its existing `Type` as the next-move lane:
 `decision-needed` means decision now, `verification` means evidence needed, and
 `action` means implementation correction. Use `risk` only when no responsible
@@ -141,6 +154,14 @@ read `artifact-quality-review.md`. Give it the reviewer question, draft outputs,
 and their cited evidence. The reviewer does not read the worker rubric. Revise
 the selected outputs once from its feedback; the worker writes no artifact,
 shared state, or gate.
+
+Before marking the reviewer complete, reconcile the quality worker and every
+other task recursively spawned by this reviewer against recorded lifecycle
+provenance. Each start requires exactly one terminal outcome: completed,
+failed, cancelled, or interrupted. Do not infer closure from returned prose or
+an artifact. Leave the reviewer incomplete while a task is running, open,
+multiply terminated, or ambiguously correlated, and return the exact task and
+session to the coordinator.
 
 On a resume in the same audit root, read the prior open-items table and relevant
 decision inventory/register before writing. For each material prior open item,

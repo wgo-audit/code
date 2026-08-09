@@ -2,7 +2,7 @@
 id: code-quality
 name: Code Quality
 summary: Which code-level risks materially affect correctness, delivery, maintainability, security, or product promises?
-version: 0.1
+version: 0.2
 codegraph: required
 depends_on:
   - architecture
@@ -57,9 +57,12 @@ collectors do not invoke CodeGraph.
 ## Completion Criteria
 
 State the declared-gate inventory, exact executed and unexecuted check
-boundaries, quality evidence, material test-fixture contract drift, and selected
-outputs. For any green suite, state the critical paths it did and did not cover.
-Separate source inspection from executed behavior.
+boundaries, and coverage position as `measured`, brief-authorized `declined`, or
+`blocked`. State material fixture provenance as `production-generated`,
+`independently-built`, or `unknown`, including duplicated production contracts,
+contract drift, quality evidence, and selected outputs. For any green suite,
+state the critical paths it did and did not cover. Separate source inspection
+from executed behavior.
 
 ## Escalation Conditions
 

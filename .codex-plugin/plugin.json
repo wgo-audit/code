@@ -5,10 +5,10 @@
   "author": {
     "name": "Patrick Drolet",
     "email": "patrick@drolet.name",
-    "url": "https://github.com/PatD42"
+    "url": "https://github.com/Patrick-Loves-Espresso"
   },
-  "homepage": "https://github.com/PatD42/whats-going-on",
-  "repository": "https://github.com/PatD42/whats-going-on",
+  "homepage": "https://wgo-audit.com",
+  "repository": "https://github.com/wgo-audit/code",
   "license": "MIT",
   "keywords": [
     "audit",
@@ -28,7 +28,7 @@
       "Interactive",
       "Write"
     ],
-    "websiteURL": "https://github.com/PatD42/whats-going-on",
+    "websiteURL": "https://wgo-audit.com",
     "defaultPrompt": [
       "Run wgo:onboard.",
       "Run wgo:audit product-value.",

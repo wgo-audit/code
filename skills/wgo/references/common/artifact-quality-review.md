@@ -17,7 +17,9 @@ Check whether each artifact:
 5. supports zero or more decision insights only where the evidence changes a
    decision, priority, sequence, claim, or stop condition.
 6. identifies evidence-supported strengths that reduce a stated mandate concern,
-   when any exist, without treating an evidence gap as a strength.
+   when any exist, without treating an evidence gap as a strength; and
+7. supports each finding's severity and effort classification from its evidenced
+   consequence, correction boundary, and stated limitations.
 
 A decision-insight candidate must state the decision, causal relationship or
 conflict, consequence, and smallest next proof/action. Reject fact restatements,

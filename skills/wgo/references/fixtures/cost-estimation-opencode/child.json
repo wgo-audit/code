@@ -1,0 +1,19 @@
+{
+  "info": {
+    "id": "ses-child",
+    "parentID": "ses-root",
+    "version": "1.18.11",
+    "tokens": {"input": 700, "output": 50, "reasoning": 5, "cache": {"read": 100, "write": 0}},
+    "cost": 0.0043
+  },
+  "messages": [
+    {
+      "info": {"id": "msg-child-a", "sessionID": "ses-child", "role": "assistant", "providerID": "anthropic", "modelID": "claude-opus-5", "agent": "general", "tokens": {"input": 500, "output": 30, "reasoning": 5, "cache": {"read": 100, "write": 0}}, "cost": 0.0033},
+      "parts": [{"type": "text", "text": "Child analysis."}]
+    },
+    {
+      "info": {"id": "msg-child-last", "sessionID": "ses-child", "role": "assistant", "providerID": "anthropic", "modelID": "claude-opus-5", "agent": "general", "tokens": {"input": 200, "output": 20, "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 0.001},
+      "parts": [{"type": "text", "text": "Child complete."}]
+    }
+  ]
+}

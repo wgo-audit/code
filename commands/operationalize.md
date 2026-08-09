@@ -2,16 +2,19 @@
 name: operationalize
 description: Turn an approved synthesis into explicitly untested, source-linked operator aids without executing procedures or changing systems.
 skills: wgo
+disable-model-invocation: true
 ---
 
 # /operationalize
 
-Codex users may invoke this as `wgo:operationalize`.
+Invoke this as `wgo:operationalize` in Codex, `/wgo:operationalize` in Claude,
+or `/wgo-operationalize` in OpenCode.
 
-Resolve the newest dated audit root with
-`skills/wgo/references/common/audit-root.md`.
+Load and use the WGO skill. Resolve the newest dated audit root with its
+`references/common/audit-root.md`.
 
-Run the complete workflow in `skills/wgo/references/common/operationalization.md`.
+Run the complete workflow in its
+`references/common/operationalization.md`.
 
 Hard rules:
 
@@ -25,3 +28,9 @@ Hard rules:
 - Create an operating-control strategy only when the completed controls need an explicit stabilization and authority model; it is a derived decision aid, not a second backlog or a runbook.
 - Create the four-part transition packet at `operator-aids/`: `replacement-maintainer`, `recovery`, `observability`, and `iam-and-credential-control`. Keep them separate, cross-linked, and evidence-bounded.
 - Do not create a fixed-size 72-hour mission board. Generate the execution-priority taxonomy instead.
+- After the packet is complete, emit the operationalization-complete cutoff and
+  rerun the Codex, Claude, or OpenCode cost workflow selected from the platform
+  recorded in `audit-brief.md`. Update
+  `controls/cost-estimate.md` through operationalization without modifying the
+  frozen audit-only cost evidence or charging either cost-calculation phase to
+  the audit.

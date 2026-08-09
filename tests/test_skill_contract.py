@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -16,9 +17,6 @@ EXPECTED_REVIEWERS = {
     "contributor-vendor-value", "expense-exposure", "maintenance-cost",
     "product-value", "project-health", "revenue-risk", "scalability",
     "security-privacy",
-}
-EXPECTED_REVIEWER_VERSIONS = {
-    "security-privacy": "0.2",
 }
 
 
@@ -47,6 +45,47 @@ def frontmatter_dependencies(path: Path) -> list[str]:
     return dependencies
 
 
+def run_provider_cost_fixture(
+    workflow_name: str,
+    fixture_name: str,
+    basis_name: str,
+    manifest_name: str = "frozen-manifest.json",
+) -> dict[str, object]:
+    workflow = (SKILL / f"references/common/{workflow_name}").read_text(encoding="utf-8")
+    match = re.search(
+        r"```sh\npython3 - .*? <<'PY'\n(?P<recipe>.*?)\nPY\n```",
+        workflow,
+        re.DOTALL,
+    )
+    if not match:
+        raise AssertionError("portable cost recipe not found")
+    fixture = SKILL / f"references/fixtures/{fixture_name}"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-",
+            str(fixture / manifest_name),
+            str(SKILL / f"references/data/{basis_name}"),
+        ],
+        input=match.group("recipe"),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode:
+        raise AssertionError(result.stderr)
+    return json.loads(result.stdout)
+
+
+def run_cost_fixture(manifest_name: str) -> dict[str, object]:
+    return run_provider_cost_fixture(
+        "cost-estimation.md",
+        "cost-estimation",
+        "api-rate-card-2026-08-07.json",
+        manifest_name,
+    )
+
+
 class SkillContractTests(unittest.TestCase):
     def test_skill_routes_a_lean_layout(self) -> None:
         content = (SKILL / "SKILL.md").read_text(encoding="utf-8")
@@ -73,8 +112,7 @@ class SkillContractTests(unittest.TestCase):
         for reviewer_id, path in files.items():
             content = path.read_text(encoding="utf-8")
             self.assertRegex(content, rf"(?m)^id: {re.escape(reviewer_id)}$")
-            expected_version = EXPECTED_REVIEWER_VERSIONS.get(reviewer_id, "0.1")
-            self.assertRegex(content, rf"(?m)^version: {re.escape(expected_version)}$")
+            self.assertRegex(content, r"(?m)^version: 0\.2$")
             self.assertRegex(content, r"(?m)^codegraph: (?:none|optional|required)$")
             dependencies = set(frontmatter_dependencies(path))
             self.assertLessEqual(dependencies, EXPECTED_REVIEWERS)
@@ -253,7 +291,8 @@ class SkillContractTests(unittest.TestCase):
         skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
 
         for content in (onboarding, preparation):
-            self.assertIn("gpt-5.6-luna", content)
+            self.assertIn("gpt-5.6-terra", content)
+            self.assertIn("high reasoning", content)
             self.assertIn("Sonnet 5", content)
             self.assertIn("gemini-3.5-flash-lite", content)
             self.assertIn("active audit model", content)
@@ -266,6 +305,10 @@ class SkillContractTests(unittest.TestCase):
         )
         self.assertIn(
             "active audit platform, and chosen same-platform catalog model",
+            " ".join(skill.split()),
+        )
+        self.assertIn(
+            "every delegated WGO worker uses `gpt-5.6-terra` at high reasoning",
             " ".join(skill.split()),
         )
 
@@ -363,6 +406,184 @@ class SkillContractTests(unittest.TestCase):
         self.assertNotIn("| 6 | Synthesis |", audit)
         self.assertIn("Should I proceed with\nwgo:operationalize?", summary)
         self.assertIn("Should I proceed with wgo:operationalize?", synthesis)
+
+    def test_cost_phases_are_attributed_and_operationalization_refreshes_the_estimate(self) -> None:
+        onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
+        audit = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
+        synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
+        operationalization = (
+            SKILL / "references/common/operationalization.md"
+        ).read_text(encoding="utf-8")
+        cost = (SKILL / "references/common/cost-estimation.md").read_text(encoding="utf-8")
+        cost_template = (
+            SKILL / "references/templates/cost-estimate-template.md"
+        ).read_text(encoding="utf-8")
+        skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        command = (ROOT / "commands/operationalize.md").read_text(encoding="utf-8")
+
+        self.assertIn("WGO_PHASE_ONBOARDING_START", onboarding)
+        self.assertIn("WGO_PHASE_AUDIT_START", audit)
+        self.assertIn("WGO_PHASE_SUMMARY_START", synthesis)
+        self.assertIn("WGO_AUDIT_COMPLETE_COST_PHASE_STARTS", synthesis)
+        self.assertIn("WGO_PHASE_OPERATIONALIZATION_START", operationalization)
+        self.assertIn(
+            "WGO_OPERATIONALIZATION_COMPLETE_COST_PHASE_STARTS",
+            operationalization,
+        )
+        self.assertIn("cost-manifest-operationalized.json", cost)
+        self.assertIn('"excluded": ["cost-estimation"]', cost)
+        self.assertIn("phase subtotals", cost)
+        self.assertIn("cost-estimate-template.md", cost)
+        self.assertIn("cost-estimate-template.md", skill)
+        self.assertIn("display every priced", cost_template)
+        self.assertIn("`$X.XX`", cost_template)
+        self.assertIn("rounded half up", cost_template)
+        self.assertIn("never sum already-rounded display rows", cost_template)
+        self.assertIn("Use `unpriced`, not `$0.00`", " ".join(cost_template.split()))
+        self.assertIn("## Token Totals By Session And Model", cost_template)
+        self.assertIn("Update\n  `controls/cost-estimate.md`", command)
+        self.assertIn("preserve the frozen\naudit-only manifest", operationalization)
+
+    def test_cost_fixture_bounds_full_history_and_suppresses_unchanged_echoes(self) -> None:
+        fixture = SKILL / "references/fixtures/cost-estimation"
+        for manifest_name, expected_name in (
+            ("frozen-manifest.json", "expected-result.json"),
+            ("operationalized-manifest.json", "expected-operationalized-result.json"),
+        ):
+            actual = run_cost_fixture(manifest_name)
+            expected = json.loads((fixture / expected_name).read_text(encoding="utf-8"))
+            self.assertEqual(expected, actual)
+            self.assertFalse(actual["issues"])
+            self.assertEqual(
+                {"ses-child", "ses-nested"},
+                {item["first"]["session_id"] for item in actual["duplicates"]},
+            )
+            self.assertTrue(
+                all(item["kind"] == "unchanged-legacy-state"
+                    for item in actual["duplicates"])
+            )
+
+        manifest = json.loads(
+            (fixture / "frozen-manifest.json").read_text(encoding="utf-8")
+        )
+        descendants = {
+            session["session_id"]: session
+            for session in manifest["sessions"]
+            if session["root_relationship"] == "descendant"
+        }
+        self.assertEqual({"ses-child", "ses-nested"}, set(descendants))
+        self.assertEqual(5, descendants["ses-child"]["lifecycle"]["start"]["line_number"])
+        self.assertEqual(10, descendants["ses-child"]["lifecycle"]["terminal"]["line_number"])
+        self.assertEqual(11, descendants["ses-nested"]["lifecycle"]["start"]["line_number"])
+        self.assertEqual(15, descendants["ses-nested"]["lifecycle"]["terminal"]["line_number"])
+        child_first = json.loads(
+            (fixture / "child.jsonl").read_text(encoding="utf-8").splitlines()[0]
+        )
+        self.assertEqual("ses-root", child_first["payload"]["id"])
+        self.assertEqual(
+            "ses-child", descendants["ses-child"]["session_meta"]["session_id"]
+        )
+        self.assertEqual(
+            {"ses-unrelated"},
+            {session["session_id"] for session in manifest["exclusions"]},
+        )
+
+    def test_cost_command_routes_to_distinct_provider_auditors(self) -> None:
+        command = (ROOT / "commands/cost.md").read_text(encoding="utf-8")
+        skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        workflows = {
+            "Codex": "cost-estimation.md",
+            "Claude": "cost-estimation-claude.md",
+            "OpenCode": "cost-estimation-opencode.md",
+        }
+
+        for provider, workflow_name in workflows.items():
+            self.assertIn(f"{provider}: `references/common/{workflow_name}`", command)
+            self.assertTrue((SKILL / f"references/common/{workflow_name}").is_file())
+            self.assertIn(workflow_name, skill)
+        self.assertIn("missing, ambiguous, or\nunsupported", command)
+        self.assertIn("`Unreconciled`", command)
+
+    def test_claude_cost_fixture_collapses_progressive_requests(self) -> None:
+        actual = run_provider_cost_fixture(
+            "cost-estimation-claude.md",
+            "cost-estimation-claude",
+            "anthropic-api-rate-card-2026-08-07.json",
+        )
+
+        self.assertFalse(actual["issues"])
+        self.assertEqual("0.007645", actual["total_cost_usd"])
+        self.assertEqual(
+            {"req-summary", "req-child"},
+            {duplicate["request_id"] for duplicate in actual["duplicates"]},
+        )
+        self.assertEqual(1750, sum(row["input_tokens"] for row in actual["rows"]))
+        self.assertEqual(
+            {"claude-root", "claude-root:agent:worker1"},
+            {row["record_set_id"] for row in actual["rows"]},
+        )
+        fixture = SKILL / "references/fixtures/cost-estimation-claude"
+        manifest = json.loads((fixture / "frozen-manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            {"claude-unrelated"},
+            {item["record_set_id"] for item in manifest["exclusions"]},
+        )
+
+    def test_opencode_cost_fixture_uses_messages_not_session_aggregates(self) -> None:
+        actual = run_provider_cost_fixture(
+            "cost-estimation-opencode.md",
+            "cost-estimation-opencode",
+            "opencode-cost-basis-2026-08-07.json",
+        )
+
+        self.assertFalse(actual["issues"])
+        self.assertFalse(actual["duplicates"])
+        self.assertEqual("0.00790", actual["total_cost_usd"])
+        self.assertEqual(1750, sum(row["input_tokens"] for row in actual["rows"]))
+        self.assertEqual(
+            {"ses-root", "ses-child"},
+            {row["session_id"] for row in actual["rows"]},
+        )
+        message_ids = {
+            message_id for row in actual["rows"] for message_id in row["message_ids"]
+        }
+        self.assertNotIn("msg-cost-work", message_ids)
+        self.assertNotIn("msg-unrelated", message_ids)
+        fixture = SKILL / "references/fixtures/cost-estimation-opencode"
+        manifest = json.loads((fixture / "frozen-manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            {"ses-unrelated"},
+            {item["session_id"] for item in manifest["exclusions"]},
+        )
+
+    def test_delegated_task_lifecycle_gate_precedes_synthesis(self) -> None:
+        command = (ROOT / "commands/audit.md").read_text(encoding="utf-8")
+        reviewer = (SKILL / "references/common/reviewer-audit.md").read_text(
+            encoding="utf-8"
+        )
+        synthesis = (SKILL / "references/common/synthesis.md").read_text(
+            encoding="utf-8"
+        )
+        cost = (SKILL / "references/common/cost-estimation.md").read_text(
+            encoding="utf-8"
+        )
+
+        for content in (command, reviewer, synthesis):
+            normalized = " ".join(content.split())
+            self.assertIn("exactly one terminal outcome", normalized)
+            for outcome in ("completed", "failed", "cancelled", "interrupted"):
+                self.assertIn(outcome, normalized)
+            self.assertIn("Do not infer closure", normalized)
+        self.assertLess(
+            synthesis.index("exactly one\nterminal outcome"),
+            synthesis.index("WGO_PHASE_SUMMARY_START"),
+        )
+        self.assertIn("blocks synthesis", cost)
+        self.assertIn("Parse only that inclusive interval", cost)
+        self.assertIn(
+            "Never select whichever metadata record happens to appear last",
+            " ".join(cost.split()),
+        )
 
     def test_architecture_and_product_require_decision_inventory_and_register(self) -> None:
         architecture = reviewer_card("architecture").read_text(encoding="utf-8")
@@ -699,7 +920,7 @@ class SkillContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         code_quality = reviewer_card("code-quality").read_text(encoding="utf-8")
         security = reviewer_card("security-privacy").read_text(encoding="utf-8")
-        identity = (REVIEWERS / "security-privacy/workers/identity-secrets-data-boundaries.md").read_text(encoding="utf-8")
+        tooling = (REVIEWERS / "security-privacy/workers/supply-chain-and-tooling.md").read_text(encoding="utf-8")
 
         self.assertIn("Documented outside audited scope; not independently\n   verified.", evidence)
         self.assertIn("smallest useful\nscope expansion", workflow)
@@ -713,18 +934,57 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("runtime-build-surfaces.md", code_quality)
         self.assertIn("public security, privacy, and disclosure claims", security)
         self.assertIn("abuse or\nmisuse controls", security)
-        self.assertIn("trust material to its consumer validation", identity)
+        self.assertIn("consuming verifier", tooling)
         self.assertIn("vulnerability-class checklist", security)
         self.assertIn("OSPS Baseline tier", security)
         self.assertIn("trust-anchor consumption", security)
         self.assertIn("supply-chain-and-tooling.md", security)
 
         checklist = (REVIEWERS / "security-privacy/vulnerability-class-checklist.md").read_text(encoding="utf-8")
-        tooling = (REVIEWERS / "security-privacy/workers/supply-chain-and-tooling.md").read_text(encoding="utf-8")
         for phrase in ("Canonicalization", "Data minimization", "Product-Class Abuse"):
             self.assertIn(phrase, checklist)
         for phrase in ("OpenSSF Scorecard", "OSV-Scanner", "gitleaks", "SBOM", "trust anchor"):
             self.assertIn(phrase, tooling)
+
+    def test_lean_feedback_improvements_are_explicit_and_bounded(self) -> None:
+        workflow = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
+        quality = (SKILL / "references/common/artifact-quality-review.md").read_text(encoding="utf-8")
+        reports = (
+            SKILL / "references/templates/reviewer-report-template.md"
+        ).read_text(encoding="utf-8")
+        code_quality = reviewer_card("code-quality").read_text(encoding="utf-8")
+        security = reviewer_card("security-privacy").read_text(encoding="utf-8")
+        project_health = reviewer_card("project-health").read_text(encoding="utf-8")
+        security_worker = (
+            REVIEWERS / "security-privacy/workers/supply-chain-and-tooling.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("| Finding | Severity | Effort | Evidence links", reports)
+        for phrase in (
+            "consequence-based severity",
+            "smallest credible corrective effort",
+            "open-item priority remains urgency",
+        ):
+            self.assertIn(phrase, workflow)
+        self.assertIn("severity and effort classification", quality)
+
+        for state in ("`measured`", "`declined`", "`blocked`"):
+            self.assertIn(state, code_quality)
+        for state in ("`production-generated`", "`independently-built`", "`unknown`"):
+            self.assertIn(state, code_quality)
+
+        self.assertIn("supply-chain-and-tooling.md", security)
+        self.assertIn("vulnerability-class checklist", security)
+        self.assertLessEqual(len(security_worker.splitlines()), 25)
+        self.assertIn("do not write audit artifacts", security_worker)
+        self.assertIn("do not invoke CodeGraph", security_worker)
+        self.assertIn("OpenSSF Scorecard", security_worker)
+        self.assertIn("Never install project dependencies", security_worker)
+        self.assertIn("If a tool cannot run", security_worker)
+        self.assertIn("route each conflict to the reviewer owning its", project_health)
+
+        for reviewer_id in EXPECTED_REVIEWERS:
+            self.assertIn("version: 0.2", reviewer_card(reviewer_id).read_text(encoding="utf-8"))
 
     def test_structural_validation_is_optional(self) -> None:
         workflow = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
@@ -974,7 +1234,7 @@ class SkillContractTests(unittest.TestCase):
         normalized_guide = " ".join(guide.split())
 
         self.assertIn("## Improve Or Compare An Audit", readme)
-        self.assertIn("begin an audit with Codex", readme)
+        self.assertIn("begin an audit with Codex, Claude, or OpenCode", readme)
         self.assertIn("not blindly append-only", readme)
         self.assertIn("Comparison modes never modify the\nbaseline", readme)
         self.assertIn(
@@ -985,7 +1245,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Does anything in this onboarding configuration need to be updated?", onboarding)
         self.assertIn("## Audit Roots And Comparison", onboarding)
         self.assertIn("temporary project copy", " ".join(onboarding.split()))
-        self.assertIn("Plain `wgo:onboard` reopens the newest root", readme)
+        self.assertIn("provider's\nplain onboarding command reopens the newest root", readme)
         self.assertIn(
             "require the auditor to accept the installed versions",
             " ".join(readme.split()),

@@ -12,7 +12,7 @@ scope, or select reviewers.
 
 Use only the active audit platform and its existing session or credentials. Do
 not request, configure, or call another provider. The onboarding lead supplies
-one catalog model: Codex/OpenAI uses `gpt-5.6-luna` at high reasoning,
+one catalog model: Codex/OpenAI uses `gpt-5.6-terra` at high reasoning,
 Claude/Anthropic uses Sonnet 5 at high reasoning, Antigravity/Gemini uses
 `gemini-3.5-flash-lite`, and another platform uses its active audit model. If a
 preferred same-platform model is unavailable, use that active audit model.

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "provider": "claude-code",
+  "coverage": "audit",
+  "root_session_id": "claude-root",
+  "pricing_basis": {
+    "rate_card": "../../data/anthropic-api-rate-card-2026-08-07.json",
+    "default_service_tier_when_not_returned": "standard",
+    "default_inference_geo_when_not_returned": "global"
+  },
+  "phase_policy": {
+    "included": ["unattributed", "onboarding", "audit", "summary"],
+    "excluded": ["cost-estimation"],
+    "markers": {
+      "WGO_PHASE_ONBOARDING_START": "onboarding",
+      "WGO_PHASE_AUDIT_START": "audit",
+      "WGO_PHASE_SUMMARY_START": "summary",
+      "WGO_AUDIT_COMPLETE_COST_PHASE_STARTS": "cost-estimation",
+      "WGO_PHASE_OPERATIONALIZATION_START": "operationalization",
+      "WGO_OPERATIONALIZATION_COMPLETE_COST_PHASE_STARTS": "cost-estimation"
+    }
+  },
+  "sessions": [
+    {
+      "record_set_id": "claude-root",
+      "session_id": "claude-root",
+      "agent_id": null,
+      "file_path": "root.jsonl",
+      "prefix_sha256": "30a2d5c312382727c36ce36b6c4fa426e1cbcbaa5ea6507983785978367132e2",
+      "wgo_role_task_name": "Claude audit coordinator",
+      "phase": "from-markers",
+      "parent_record_set_id": null,
+      "root_relationship": "root",
+      "decision": "included",
+      "rationale": "Fixture root through the explicit cost boundary.",
+      "cutoff": {"marker": "WGO_AUDIT_COMPLETE_COST_PHASE_STARTS", "line_number": 9},
+      "usage_schema": "claude-code-assistant-message-usage-v1"
+    },
+    {
+      "record_set_id": "claude-root:agent:worker1",
+      "session_id": "claude-root",
+      "agent_id": "worker1",
+      "file_path": "agent-worker1.jsonl",
+      "prefix_sha256": "3b35711bade0d243f4ca9a6673c1f13ef75061d85a630314610612b7c4449b87",
+      "metadata_path": "agent-worker1.meta.json",
+      "metadata_sha256": "28072eb9cb59269f022e54587e1b09be8bd4a2119f7901abac4df22233266c6b",
+      "tool_use_id": "toolu_child",
+      "wgo_role_task_name": "wgo reviewer: architecture",
+      "phase": "audit",
+      "parent_record_set_id": "claude-root",
+      "root_relationship": "descendant",
+      "decision": "included",
+      "rationale": "Matching Agent tool use, metadata, child agentId, and completed result.",
+      "lifecycle": {"spawn_line": 4, "terminal_line": 5, "outcome": "completed"},
+      "cutoff": {"line_number": 2},
+      "usage_schema": "claude-code-assistant-message-usage-v1"
+    }
+  ],
+  "exclusions": [
+    {
+      "record_set_id": "claude-unrelated",
+      "file_path": "unrelated.jsonl",
+      "decision": "excluded",
+      "rationale": "No Agent/Task provenance path from claude-root."
+    }
+  ]
+}

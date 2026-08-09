@@ -1,0 +1,96 @@
+{
+  "schema_version": 2,
+  "coverage": "audit",
+  "root_session_id": "ses-root",
+  "session_search_roots": ["fixture directory"],
+  "pricing_basis": {
+    "rate_card": "../../data/api-rate-card-2026-08-07.json",
+    "default_service_tier_when_not_returned": "standard",
+    "note": "Declared API-equivalent basis, not actual Codex backend tier."
+  },
+  "phase_policy": {
+    "included": ["unattributed", "onboarding", "audit", "summary"],
+    "excluded": ["cost-estimation"],
+    "markers": {
+      "WGO_PHASE_ONBOARDING_START": "onboarding",
+      "WGO_PHASE_AUDIT_START": "audit",
+      "WGO_PHASE_SUMMARY_START": "summary",
+      "WGO_AUDIT_COMPLETE_COST_PHASE_STARTS": "cost-estimation",
+      "WGO_PHASE_OPERATIONALIZATION_START": "operationalization",
+      "WGO_OPERATIONALIZATION_COMPLETE_COST_PHASE_STARTS": "cost-estimation"
+    }
+  },
+  "phase_boundaries": [
+    {"phase": "onboarding", "marker": "WGO_PHASE_ONBOARDING_START", "session_id": "ses-root", "line_number": 2},
+    {"phase": "audit", "marker": "WGO_PHASE_AUDIT_START", "session_id": "ses-root", "line_number": 5},
+    {"phase": "summary", "marker": "WGO_PHASE_SUMMARY_START", "session_id": "ses-root", "line_number": 9},
+    {"phase": "cost-estimation", "marker": "WGO_AUDIT_COMPLETE_COST_PHASE_STARTS", "session_id": "ses-root", "line_number": 12}
+  ],
+  "root_cutoff": {"marker": "WGO_AUDIT_COMPLETE_COST_PHASE_STARTS", "line_number": 12},
+  "sessions": [
+    {
+      "session_id": "ses-root",
+      "file_path": "root.jsonl",
+      "prefix_sha256": "d6f056039423e06c164e4c90c780590114af1e24405c2d95fefe81d11b9aca44",
+      "wgo_role_task_name": "Terra audit coordinator",
+      "phase": "from-markers",
+      "parent_session_id": null,
+      "root_relationship": "root",
+      "decision": "included",
+      "rationale": "Current audit root through the persisted WGO_AUDIT_COMPLETE_COST_PHASE_STARTS marker.",
+      "session_meta": {"line_number": 1, "session_id": "ses-root"},
+      "lifecycle": null,
+      "cutoff": {"marker": "WGO_AUDIT_COMPLETE_COST_PHASE_STARTS", "line_number": 12},
+      "provenance": [{"kind": "session_meta"}, {"kind": "sub_agent_activity", "event_id": "evt-spawn-code-quality"}],
+      "usage_schema": "codex-rollout-token-count-v1"
+    },
+    {
+      "session_id": "ses-child",
+      "file_path": "child.jsonl",
+      "prefix_sha256": "d178ce20cf1f3d1c717a1b873c357944698ebe83f81a262a5454b1b8a6cd5933",
+      "wgo_role_task_name": "wgo reviewer: code-quality",
+      "phase": "audit",
+      "parent_session_id": "ses-root",
+      "root_relationship": "descendant",
+      "decision": "included",
+      "rationale": "Root sub_agent_activity and matching child thread_spawn, task_started, and task_complete records name ses-root and code-quality.",
+      "session_meta": {"line_number": 4, "session_id": "ses-child"},
+      "lifecycle": {
+        "task_id": "task-code-quality",
+        "start": {"event": "task_started", "line_number": 5},
+        "terminal": {"event": "task_complete", "outcome": "completed", "line_number": 10}
+      },
+      "cutoff": {"provenance": "task_complete", "line_number": 10},
+      "provenance": [{"kind": "sub_agent_activity"}, {"kind": "thread_spawn"}, {"kind": "task_started"}, {"kind": "task_complete"}],
+      "usage_schema": "codex-rollout-token-count-v1"
+    },
+    {
+      "session_id": "ses-nested",
+      "file_path": "nested-child.jsonl",
+      "prefix_sha256": "46224cc928440cd85d8049a37d9399f53258c18072ca8a95b2974a2dd2846e1d",
+      "wgo_role_task_name": "code-quality artifact quality check",
+      "phase": "audit",
+      "parent_session_id": "ses-child",
+      "root_relationship": "descendant",
+      "decision": "included",
+      "rationale": "The included code-quality child records the nested spawn; matching nested thread_spawn, task_started, and task_complete records identify its bounded quality-check task.",
+      "session_meta": {"line_number": 10, "session_id": "ses-nested"},
+      "lifecycle": {
+        "task_id": "task-quality-check",
+        "start": {"event": "task_started", "line_number": 11},
+        "terminal": {"event": "task_complete", "outcome": "completed", "line_number": 15}
+      },
+      "cutoff": {"provenance": "task_complete", "line_number": 15},
+      "provenance": [{"kind": "sub_agent_activity"}, {"kind": "thread_spawn"}, {"kind": "task_started"}, {"kind": "task_complete"}],
+      "usage_schema": "codex-rollout-token-count-v1"
+    }
+  ],
+  "exclusions": [
+    {
+      "session_id": "ses-unrelated",
+      "file_path": "unrelated.jsonl",
+      "decision": "excluded",
+      "rationale": "Same workspace/day but no recorded collaboration spawn and task-lifecycle path from ses-root."
+    }
+  ]
+}

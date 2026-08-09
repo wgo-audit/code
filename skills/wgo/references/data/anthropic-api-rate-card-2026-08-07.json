@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "rate_card_date": "2026-08-07",
+  "currency": "USD",
+  "unit": "per_1_million_tokens",
+  "pricing_basis": "Anthropic first-party API list pricing; this is not a Claude subscription, Bedrock, Vertex AI, or Microsoft Foundry invoice.",
+  "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "source_checked_at": "2026-08-07",
+  "default_inference_geo_when_not_returned": "global",
+  "inference_geo_multipliers": {
+    "global": 1.0,
+    "us": 1.1
+  },
+  "models": {
+    "claude-opus-5": {
+      "standard": {
+        "input": 5.0,
+        "cache_write_5m": 6.25,
+        "cache_write_1h": 10.0,
+        "cache_read": 0.5,
+        "output": 25.0
+      }
+    },
+    "claude-sonnet-5": {
+      "standard": {
+        "input": 2.0,
+        "cache_write_5m": 2.5,
+        "cache_write_1h": 4.0,
+        "cache_read": 0.2,
+        "output": 10.0,
+        "effective_through": "2026-08-31"
+      }
+    },
+    "claude-sonnet-4-6": {
+      "standard": {
+        "input": 3.0,
+        "cache_write_5m": 3.75,
+        "cache_write_1h": 6.0,
+        "cache_read": 0.3,
+        "output": 15.0
+      }
+    },
+    "claude-haiku-4-5": {
+      "standard": {
+        "input": 1.0,
+        "cache_write_5m": 1.25,
+        "cache_write_1h": 2.0,
+        "cache_read": 0.1,
+        "output": 5.0
+      }
+    }
+  },
+  "notes": [
+    "Use only an exact model key and observed standard service tier; unknown models or tiers are unpriced.",
+    "Apply the US inference multiplier only when the transcript reports inference_geo=us. When inference_geo is absent or not_available, use the manifest's declared global API-equivalent basis and disclose that geography was not observed.",
+    "Cache creation must be split into ephemeral 5-minute and 1-hour token fields. A nonzero unsplit cache-creation total is unpriced rather than assumed to use the 5-minute rate.",
+    "Claude Sonnet 5 pricing in this dated card is the introductory rate effective through 2026-08-31; later audits require a newer card."
+  ]
+}

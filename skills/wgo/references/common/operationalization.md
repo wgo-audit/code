@@ -4,6 +4,10 @@ Use only after a completed or bounded synthesis and the auditor explicitly asks
 for it. Read the brief, final reports, selected artifacts, and evidence
 directly. Do not infer a completed synthesis from a status table.
 
+Before doing operationalization work, emit this normal progress message once:
+`Starting operationalization. <!-- WGO_PHASE_OPERATIONALIZATION_START -->`. The
+HTML comment is a persisted cost-attribution marker, not audit evidence.
+
 Before drafting, tell the auditor that WGO will create the required four-part
 transition packet: `replacement-maintainer`, `recovery`, `observability`, and
 `iam-and-credential-control`. Also list the optional additions:
@@ -50,3 +54,15 @@ parallel runbook library.
 
 Update the relevant checklist entry and add an open item only when a future
 owner, authority decision, or proof is required.
+
+After the selected operator packet is complete, emit this normal progress
+message once: `Operationalization complete; refreshing cost estimate. <!--
+WGO_OPERATIONALIZATION_COMPLETE_COST_PHASE_STARTS -->`. Then rerun the complete
+cost-estimation workflow selected from the platform in `audit-brief.md`:
+`cost-estimation.md` for Codex, `cost-estimation-claude.md` for Claude, or
+`cost-estimation-opencode.md` for OpenCode, with coverage through
+operationalization. Update `controls/cost-estimate.md`, but preserve the frozen
+audit-only manifest and verification outputs. Exclude both cost-calculation
+phases from the estimate itself. If the refreshed result is unreconciled,
+publish that status and its exact limitations rather than retaining the earlier
+precise total as though it included operationalization.

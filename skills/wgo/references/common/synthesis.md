@@ -3,6 +3,20 @@
 Use for `wgo:summarize`. Synthesis is an audit-lead reconciliation step, not a
 concatenation of reports or a workflow gate.
 
+Before doing synthesis work or emitting the summary phase marker, recursively
+reconcile every WGO task spawned from the audit root against recorded
+collaboration and task-lifecycle provenance. Every start must have exactly one
+terminal outcome: completed, failed, cancelled, or interrupted. Do not infer
+closure from reports, checklist states, messages, or worker disappearance. If
+any task remains running, open, multiply terminated, or ambiguously correlated,
+do not begin synthesis; wait or report the exact blocking task/session. A
+failed, cancelled, or interrupted task is lifecycle-closed but does not make
+its reviewer successful; retain the existing dependency limitation.
+
+After that gate passes, emit this normal progress message once:
+`Starting synthesis. <!-- WGO_PHASE_SUMMARY_START -->`. The HTML comment is a
+persisted cost-attribution marker, not audit evidence.
+
 Read each completed reviewer report, handoff, and linked evidence/artifacts
 directly. A reviewer run out of order remains publishable when its report states
 the specific limitation.
@@ -61,8 +75,30 @@ versions, model names, finding counts, timestamps, or source citations. Omit
 unsupported optional fields; for required unknowns use `null`, `[]`, or a
 controlled `unknown` value.
 
+## Cost Closeout
+
+After the four audience reports pass synthesis validation, run the complete
+provider workflow selected from `audit-brief.md`: `cost-estimation.md` for
+Codex, `cost-estimation-claude.md` for Claude, or
+`cost-estimation-opencode.md` for OpenCode. This is the final
+end-of-audit phase, before the operationalization question. It creates
+`controls/cost-estimate.md` with frozen calculation evidence; link the control
+from `index.md`, `executive-summary.md`,
+`product-manager-notes.md`, and `technical-lead-notes.md` as an
+API-equivalent estimate with its reconciliation status.
+
+Immediately before starting that cost workflow, emit this normal progress
+message once: `Synthesis validated; starting cost estimation. <!--
+WGO_AUDIT_COMPLETE_COST_PHASE_STARTS -->`. The marker is the audit-only cost
+cutoff; the cost workflow itself is excluded from the estimate.
+
+Do not delay or omit the audit cost phase because a rate, JSONL field, session
+file, or reconciliation result is unknown. State the limitation, mark the
+affected model or aggregate unpriced/unreconciled, and preserve the exact
+manifest and disputed records instead.
+
 Do not create an action backlog, decision queue, status table, or a separate
 reconciliation workflow. Any operator aid remains a later, explicitly
-authorized `wgo:operationalize` activity. After the summary is complete, ask
-exactly: `Should I proceed with wgo:operationalize?` Do not draft operator aids
-until the auditor answers yes.
+authorized `wgo:operationalize` activity. After the summary and cost closeout
+are complete, ask exactly: `Should I proceed with wgo:operationalize?` Do not
+draft operator aids until the auditor answers yes.

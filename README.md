@@ -8,7 +8,7 @@ When key developers leave, a vendor handoff goes sideways, costs stop making sen
 
 Whats.Going.On. (WGO) is an open-source, prompt-first audit plugin for startups and SMBs. It guides an auditor from a plain-language concern to evidence-backed findings, owned decisions, and reports written for the people who must act on them.
 
-**WGO runs locally with Codex or Claude. There is no hosted service, database, dashboard, or proprietary scoring model.**
+**WGO runs locally with Codex, Claude, or OpenCode. There is no hosted service, database, dashboard, or proprietary scoring model.**
 
 > WGO is not another static analyzer. It is a semi-structured audit lead that helps you ask the right questions, inspect the right evidence, preserve uncertainty, and explain the result clearly.
 
@@ -43,7 +43,7 @@ Clone WGO, then install it into the project you want to audit.
 macOS or Linux:
 
 ```bash
-git clone https://github.com/PatD42/whats-going-on.git
+git clone https://github.com/wgo-audit/code.git whats-going-on
 cd whats-going-on
 ./install.sh /path/to/project
 ```
@@ -51,20 +51,35 @@ cd whats-going-on
 Windows:
 
 ```bat
-git clone https://github.com/PatD42/whats-going-on.git
+git clone https://github.com/wgo-audit/code.git whats-going-on
 cd whats-going-on
 install.bat C:\path\to\project
 ```
 
-Open the target project in Codex or Claude and start onboarding:
+Open the target project in Codex, Claude, or OpenCode and start onboarding:
 
 ```text
 # Codex
 wgo:onboard
 
 # Claude
-/wgo_onboard
+/wgo:onboard
+
+# OpenCode
+/wgo-onboard
 ```
+
+The installer creates a native Codex plugin at `plugins/wgo` and a native
+Claude plugin at `.claude/skills/wgo-claude`. It renders the same canonical
+skill for OpenCode at `.opencode/skills/wgo` and adds thin command wrappers at
+`.opencode/commands/wgo-*.md`. All three providers are rendered from the same
+canonical skill and command files; provider-specific frontmatter is filtered
+from installed copies, so the workflow cannot drift between maintained
+implementations.
+On first use, accept Claude's workspace-trust prompt; if Claude was already
+open during installation, run `/reload-plugins` or reopen the project.
+Restart OpenCode after installation. Until OpenCode indexes newly installed
+skill files, its command wrappers load `.opencode/skills/wgo/SKILL.md` directly.
 
 For a first audit, WGO confirms the company, product, business concern,
 additional evidence, and reviewers. It creates
@@ -113,7 +128,7 @@ flowchart TB
 1. **Onboard:** establish the product, mandate, evidence boundary, success criteria, and selected reviewers. WGO also discovers project-local reviewer extensions, but never selects one without approval.
 2. **Audit:** inspect one reviewer or run all selected reviewers in coordinator-defined dependency waves; register evidence, ask material questions, and update shared controls.
 3. **Check status:** see completed work, open proof, access blockers, risks, decisions, and remaining reviewers.
-4. **Summarize:** reconcile the whole audit and create decision-grade reports for each audience.
+4. **Summarize:** reconcile the whole audit, create decision-grade reports for each audience, and produce a reconciled API-equivalent audit cost estimate from Codex, Claude, or OpenCode's own session records.
 5. **Operationalize when justified:** after a completed audit, explicitly request draft operator aids. WGO will not execute them or change a system.
 
 Run a named reviewer when you want focused control. With no reviewer argument,
@@ -122,13 +137,14 @@ that do not depend on each other.
 
 ## Commands
 
-| Purpose | Codex | Claude |
-|---|---|---|
-| Start, improve, or compare an audit | `wgo:onboard` with `[compare\|blind-compare] [YYYYMMDD]` | `/wgo_onboard` with `[compare\|blind-compare] [YYYYMMDD]` |
-| Run one reviewer or all selected reviewers | `wgo:audit [reviewer-id\|all]` | `/wgo_audit [reviewer-id\|all]` |
-| Show truthful progress and blockers | `wgo:status` | `/wgo_status` |
-| Reconcile findings and generate reports | `wgo:summarize` | `/wgo_summarize` |
-| Draft operator aids after approved synthesis | `wgo:operationalize` | `/wgo_operationalize` |
+| Purpose | Codex | Claude | OpenCode |
+|---|---|---|---|
+| Start, improve, or compare an audit | `wgo:onboard` with `[compare\|blind-compare] [YYYYMMDD]` | `/wgo:onboard` with `[compare\|blind-compare] [YYYYMMDD]` | `/wgo-onboard` with `[compare\|blind-compare] [YYYYMMDD]` |
+| Run one reviewer or all selected reviewers | `wgo:audit [reviewer-id\|all]` | `/wgo:audit [reviewer-id\|all]` | `/wgo-audit [reviewer-id\|all]` |
+| Show truthful progress and blockers | `wgo:status` | `/wgo:status` | `/wgo-status` |
+| Reconcile findings and generate reports | `wgo:summarize` | `/wgo:summarize` | `/wgo-summarize` |
+| Produce a reconciled API-equivalent audit cost estimate | `wgo:cost` | `/wgo:cost` | `/wgo-cost` |
+| Draft operator aids after approved synthesis | `wgo:operationalize` | `/wgo:operationalize` | `/wgo-operationalize` |
 
 The audit always concerns the full project in the current folder, including all
 repository subfolders.
@@ -199,6 +215,19 @@ An audit should not silently turn into operational work. `wgo:operationalize` is
 2. The auditor explicitly requests operationalization.
 3. Creating local audit artifacts is permitted.
 
+When operationalization completes, WGO refreshes `controls/cost-estimate.md`
+through the operator-aid phase. It preserves the earlier audit-only cost
+manifest and excludes both cost-calculation passes from the estimate.
+
+Cost evidence is provider-specific rather than translated into a synthetic
+common log format. Codex uses rollout JSONL request usage, Claude uses its root and
+subagent JSONL transcripts with Anthropic's dated API rate card, and OpenCode
+uses validated session exports with their recorded per-message provider cost.
+Every platform freezes the included session graph before two independent
+calculations. Missing provenance, malformed exports, unknown rates, and
+unexplained zero-cost OpenCode models produce `Unreconciled` or `unpriced`
+results instead of a guessed `$0.00`.
+
 It produces a focused four-part operating packet. These are complementary
 operating perspectives, not variants of one generic runbook:
 
@@ -241,17 +270,18 @@ expansion. It does not quietly treat the referenced material as reviewed.
 ## Improve Or Compare An Audit
 
 WGO audit state is local, readable Markdown rather than model-specific memory.
-An auditor can begin an audit with Codex and later improve the same dated audit
-root with Claude, or the reverse. Plain `wgo:onboard` reopens the newest root
-read-write, displays its configuration, and asks whether anything needs
-updating.
+An auditor can begin an audit with Codex, Claude, or OpenCode and later improve
+the same dated audit root with either of the other providers. The provider's
+plain onboarding command reopens the newest root read-write, displays its
+configuration, and asks whether anything needs updating.
 
-`wgo:onboard compare [YYYYMMDD]` creates today's root and performs a targeted,
-read-only comparison against the named completed baseline or the latest
-completed audit. `wgo:onboard blind-compare [YYYYMMDD]` performs a full audit
-without exposing baseline findings, then compares the completed audits. Both
-comparison modes report reviewer-version differences and, when versions differ,
-require the auditor to accept the installed versions before proceeding.
+Adding `compare [YYYYMMDD]` to the provider's onboarding command creates today's
+root and performs a targeted, read-only comparison against the named completed
+baseline or the latest completed audit. Adding `blind-compare [YYYYMMDD]`
+performs a full audit without exposing baseline findings, then compares the
+completed audits. Both comparison modes report reviewer-version differences
+and, when versions differ, require the auditor to accept the installed versions
+before proceeding.
 
 The result is cumulative, but not blindly append-only:
 

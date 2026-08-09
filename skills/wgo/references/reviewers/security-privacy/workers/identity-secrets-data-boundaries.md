@@ -3,8 +3,7 @@ Scope: authentication/authorization, service identity, secret consumers/metadata
 Use the reviewer’s topology packet; do not invoke CodeGraph or shared collectors.
 Read relevant routes, middleware, IAM/configuration declarations, schemas, data models, and tests directly.
 Trace each material boundary from identity or data ingress through authorization, storage, consumer, and revocation/deletion path.
-For material signatures, checksums, or provenance references, trace the trust material to its consumer validation; record a missing or unclear verifier.
-Exclude edge/network/TLS/WAF/public-route configuration.
+Exclude edge/network/TLS/WAF/public-route configuration and produced-artifact trust-anchor verification.
 Verify every result in source and give an exact file and line/symbol locator.
 Separate source declaration, effective state, observed behavior, approval, and unknown.
 Never reveal secret values or infer compromise, compliance, live privilege, ownership, or rotation success.

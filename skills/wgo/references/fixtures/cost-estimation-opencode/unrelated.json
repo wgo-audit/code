@@ -1,0 +1,9 @@
+{
+  "info": {"id": "ses-unrelated", "parentID": null, "version": "1.18.11", "tokens": {"input": 9999, "output": 999, "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 9.99},
+  "messages": [
+    {
+      "info": {"id": "msg-unrelated", "sessionID": "ses-unrelated", "role": "assistant", "providerID": "anthropic", "modelID": "claude-opus-5", "agent": "build", "tokens": {"input": 9999, "output": 999, "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 9.99},
+      "parts": [{"type": "text", "text": "Same project and day, unrelated."}]
+    }
+  ]
+}

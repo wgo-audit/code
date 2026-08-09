@@ -1,0 +1,39 @@
+{
+  "info": {
+    "id": "ses-root",
+    "parentID": null,
+    "version": "1.18.11",
+    "tokens": {"input": 999999, "output": 99999, "reasoning": 9999, "cache": {"read": 99999, "write": 9999}},
+    "cost": 99.99
+  },
+  "messages": [
+    {
+      "info": {"id": "msg-start", "sessionID": "ses-root", "role": "assistant", "providerID": "anthropic", "modelID": "claude-sonnet-5", "agent": "build", "tokens": {"input": 100, "output": 10, "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 0.0003},
+      "parts": [{"type": "text", "text": "Starting onboarding. <!-- WGO_PHASE_ONBOARDING_START -->"}]
+    },
+    {
+      "info": {"id": "msg-audit-marker", "sessionID": "ses-root", "role": "assistant", "providerID": "anthropic", "modelID": "claude-sonnet-5", "agent": "build", "tokens": {"input": 50, "output": 5, "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 0.00015},
+      "parts": [{"type": "text", "text": "Starting audit. <!-- WGO_PHASE_AUDIT_START -->"}]
+    },
+    {
+      "info": {"id": "msg-spawn", "sessionID": "ses-root", "role": "assistant", "providerID": "anthropic", "modelID": "claude-sonnet-5", "agent": "build", "tokens": {"input": 300, "output": 30, "reasoning": 5, "cache": {"read": 200, "write": 0}}, "cost": 0.00094},
+      "parts": [{"id": "prt-task", "type": "tool", "callID": "call-task", "tool": "task", "state": {"status": "completed", "input": {"description": "wgo reviewer: architecture", "subagent_type": "general"}, "metadata": {"sessionId": "ses-child"}}}]
+    },
+    {
+      "info": {"id": "msg-summary-marker", "sessionID": "ses-root", "role": "assistant", "providerID": "anthropic", "modelID": "claude-sonnet-5", "agent": "build", "tokens": {"input": 100, "output": 10, "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 0.0003},
+      "parts": [{"type": "text", "text": "Starting synthesis. <!-- WGO_PHASE_SUMMARY_START -->"}]
+    },
+    {
+      "info": {"id": "msg-summary", "sessionID": "ses-root", "role": "assistant", "providerID": "anthropic", "modelID": "claude-sonnet-5", "agent": "build", "tokens": {"input": 400, "output": 40, "reasoning": 10, "cache": {"read": 50, "write": 100}}, "cost": 0.00161},
+      "parts": [{"type": "text", "text": "Summary."}]
+    },
+    {
+      "info": {"id": "msg-cost-boundary", "sessionID": "ses-root", "role": "assistant", "providerID": "anthropic", "modelID": "claude-sonnet-5", "agent": "build", "tokens": {"input": 100, "output": 10, "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 0.0003},
+      "parts": [{"type": "text", "text": "Synthesis validated; starting cost estimation. <!-- WGO_AUDIT_COMPLETE_COST_PHASE_STARTS -->"}]
+    },
+    {
+      "info": {"id": "msg-cost-work", "sessionID": "ses-root", "role": "assistant", "providerID": "anthropic", "modelID": "claude-sonnet-5", "agent": "build", "tokens": {"input": 999, "output": 99, "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 0.00999},
+      "parts": [{"type": "text", "text": "Excluded cost work."}]
+    }
+  ]
+}

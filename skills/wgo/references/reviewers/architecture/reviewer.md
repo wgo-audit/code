@@ -2,7 +2,7 @@
 id: architecture
 name: Architecture
 summary: Is the current technical boundary and its material decisions understood well enough for safe change?
-version: 0.1
+version: 0.2
 codegraph: required
 ---
 

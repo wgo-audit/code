@@ -3,15 +3,18 @@ name: audit
 description: Run one selected Whats.Going.On. reviewer, or all selected reviewers in dependency waves.
 args: "[reviewer-id|all]"
 skills: wgo
+argument-hint: "[reviewer-id|all]"
+disable-model-invocation: true
 ---
 
 # /audit
 
-Codex users may invoke this as `wgo:audit <reviewer-id>`, `wgo:audit all`, or
-`wgo:audit`.
+Invoke this as `wgo:audit <reviewer-id>`/`wgo:audit all` in Codex,
+`/wgo:audit <reviewer-id>`/`/wgo:audit all` in Claude, or
+`/wgo-audit <reviewer-id>`/`/wgo-audit all` in OpenCode.
 
-Resolve the newest dated audit root with
-`skills/wgo/references/common/audit-root.md`. Read and write only that root.
+Load and use the WGO skill. Resolve the newest dated audit root with its
+`references/common/audit-root.md`. Read and write only that root.
 
 ## One Reviewer
 
@@ -45,7 +48,8 @@ then:
    insights when they meet the shared standard, and compact handoff; then update
    the checklist and material shared open items.
 
-If this completes the last selected reviewer, automatically run `wgo:summarize`.
+If this completes the last selected reviewer, pass the delegated-task lifecycle
+gate below, then automatically run `wgo:summarize`.
 
 ## All Selected Reviewers
 
@@ -83,8 +87,9 @@ checklist. At the end of the wave, surface a qualifying auditor question before
 starting dependent work: ask one exact question, wait for its answer, record it
 in the brief and its existing `decision-needed` item, then ask another only if
 it remains material. Do not let `wgo:audit all` defer such a question merely to
-keep the run uninterrupted. Then validate the audit root and start the next
-wave. Once all selected reviewers are complete, automatically run
+keep the run uninterrupted. Then pass the delegated-task lifecycle gate,
+validate the audit root, and start the next wave. Once all selected reviewers
+are complete, pass the gate again and automatically run
 `wgo:summarize`. Under `complete-missing`, if no reviewer work was missing and
 the existing synthesis already covers the unchanged selected reviewer set, do
 not rewrite it; report that nothing was missing. Under `rerun-all`, always rerun
@@ -95,6 +100,19 @@ baseline items, their exact prior evidence links, and current evidence needed
 to reassess them. They do not search for unrelated new findings. For
 `blind-compare`, do not give reviewers any baseline content or prior
 identifiers.
+
+## Delegated-Task Lifecycle Gate
+
+Before ending a reviewer, advancing a dependency wave, or starting synthesis,
+recursively inventory every WGO task spawned during the current audit from the
+recorded collaboration and task-lifecycle provenance. Require exactly one
+terminal outcome (`completed`, `failed`, `cancelled`, or `interrupted`) for
+every recorded start. Do not infer closure from a report, checklist state,
+message, or worker disappearance. Wait for a running task; if a start remains
+open, has multiple terminal outcomes, or cannot be correlated unambiguously,
+stop the transition and identify the exact task/session. A failed, cancelled,
+or interrupted task is lifecycle-closed but still follows the existing
+dependency and audit-limitation rules.
 
 Do not mark work complete merely because a report exists. A bounded,
 completed-with-open-verification conclusion is valid when its limits are clear.
