@@ -456,6 +456,7 @@ class SkillContractTests(unittest.TestCase):
         reviewer = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
         quality = (SKILL / "references/common/artifact-quality-review.md").read_text(encoding="utf-8")
         synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
+        normalized_synthesis = " ".join(synthesis.split())
         reviewer_template = (
             SKILL / "references/templates/reviewer-report-template.md"
         ).read_text(encoding="utf-8")
@@ -466,7 +467,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Derive zero or more decision insights", reviewer)
         self.assertIn("Do not create an insight to fill a count", reviewer)
         self.assertIn("Do not require or cap candidates", quality)
-        self.assertIn("Do not set\na target number", synthesis)
+        self.assertIn("Do not set a target number", normalized_synthesis)
         self.assertIn("### Decision Insights", reviewer_template)
         self.assertIn("### Decision-Useful Conclusions", synthesis_templates)
 
@@ -474,14 +475,31 @@ class SkillContractTests(unittest.TestCase):
         reviewer = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")
         synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
         controls = (SKILL / "references/templates/control-templates.md").read_text(encoding="utf-8")
+        reports = (
+            SKILL / "references/templates/reviewer-report-template.md"
+        ).read_text(encoding="utf-8")
         templates = (SKILL / "references/templates/report-templates.md").read_text(encoding="utf-8")
+        normalized_reviewer = " ".join(reviewer.split())
+        normalized_reports = " ".join(reports.split())
+        normalized_synthesis = " ".join(synthesis.split())
 
         self.assertIn("Type` as the next-move lane", reviewer)
         self.assertIn("Priority orders work within its lane", reviewer)
+        self.assertIn("| Finding | Severity | Effort | Evidence links | Confidence and limitation | Consequence | Taxonomy |", reports)
+        self.assertIn("Severity is `Critical`, `High`, `Medium`, or `Low`", reports)
+        self.assertIn("Effort is `S`, `M`, or `L`", reports)
+        self.assertIn("CWE, ASVS, SLSA, OSPS", normalized_reports)
+        self.assertIn("For every Key Findings row", normalized_reviewer)
+        self.assertIn("Severity is consequence-based", normalized_reviewer)
+        self.assertIn("Effort is the smallest responsible next move", normalized_reviewer)
+        self.assertIn("Use taxonomy only when it is a direct fit", normalized_reviewer)
+        self.assertIn("severity, effort, and taxonomy", normalized_synthesis)
+        self.assertIn("do not collapse severity into open-item priority", normalized_synthesis)
         self.assertIn("### Decisions Now", synthesis)
         self.assertIn("### Evidence Needed", synthesis)
         self.assertIn("### Implementation Corrections", synthesis)
         self.assertIn("Priority orders items within their type", controls)
+        self.assertIn("Preserve reviewer severity, effort, and taxonomy", templates)
         self.assertIn("do not present all P1 items as one queue", templates)
 
     def test_same_root_resume_preserves_open_item_and_decision_ids(self) -> None:
