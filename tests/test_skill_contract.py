@@ -13,10 +13,18 @@ ROOT = Path(__file__).parents[1]
 SKILL = ROOT / "skills/wgo"
 REVIEWERS = SKILL / "references/reviewers"
 EXPECTED_REVIEWERS = {
-    "architecture", "business-continuity", "code-quality",
+    "application-security", "architecture", "business-continuity",
+    "cloud-security", "code-quality", "compliance-assurance",
     "contributor-vendor-value", "expense-exposure", "maintenance-cost",
     "product-value", "project-health", "revenue-risk", "scalability",
     "security-privacy",
+}
+EXPECTED_REVIEWER_VERSIONS = {
+    **{reviewer_id: "0.2" for reviewer_id in EXPECTED_REVIEWERS},
+    "application-security": "0.1",
+    "cloud-security": "0.1",
+    "compliance-assurance": "0.1",
+    "security-privacy": "0.3",
 }
 
 
@@ -112,7 +120,8 @@ class SkillContractTests(unittest.TestCase):
         for reviewer_id, path in files.items():
             content = path.read_text(encoding="utf-8")
             self.assertRegex(content, rf"(?m)^id: {re.escape(reviewer_id)}$")
-            self.assertRegex(content, r"(?m)^version: 0\.2$")
+            expected_version = re.escape(EXPECTED_REVIEWER_VERSIONS[reviewer_id])
+            self.assertRegex(content, rf"(?m)^version: {expected_version}$")
             self.assertRegex(content, r"(?m)^codegraph: (?:none|optional|required)$")
             dependencies = set(frontmatter_dependencies(path))
             self.assertLessEqual(dependencies, EXPECTED_REVIEWERS)
@@ -348,8 +357,14 @@ class SkillContractTests(unittest.TestCase):
             [
                 {"architecture"},
                 {"product-value", "security-privacy", "code-quality"},
-                {"business-continuity", "expense-exposure", "scalability"},
-                {"revenue-risk", "maintenance-cost", "contributor-vendor-value"},
+                {
+                    "application-security", "business-continuity",
+                    "cloud-security", "expense-exposure", "scalability",
+                },
+                {
+                    "compliance-assurance", "revenue-risk", "maintenance-cost",
+                    "contributor-vendor-value",
+                },
                 {"project-health"},
             ],
             waves,
@@ -983,8 +998,11 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("If a tool cannot run", security_worker)
         self.assertIn("route each conflict to the reviewer owning its", project_health)
 
-        for reviewer_id in EXPECTED_REVIEWERS:
-            self.assertIn("version: 0.2", reviewer_card(reviewer_id).read_text(encoding="utf-8"))
+        for reviewer_id, expected_version in EXPECTED_REVIEWER_VERSIONS.items():
+            self.assertIn(
+                f"version: {expected_version}",
+                reviewer_card(reviewer_id).read_text(encoding="utf-8"),
+            )
 
     def test_structural_validation_is_optional(self) -> None:
         workflow = (SKILL / "references/common/reviewer-audit.md").read_text(encoding="utf-8")

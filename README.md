@@ -18,7 +18,7 @@ Whats.Going.On. (WGO) is an open-source, prompt-first audit plugin for startups 
 - A vendor delivered a large body of work, but its usable value and maintenance cost are unclear.
 - Product claims, customer expectations, and implemented behavior may not match.
 - Cloud, software, staffing, or support costs need to be understood and controlled.
-- Leadership needs a credible view of security, privacy, architecture, scalability, or code quality.
+- Leadership needs a credible view of security, privacy, application security, cloud security, compliance assurance, architecture, scalability, or code quality.
 - A founder, buyer, investor, or incoming technical lead needs practical due diligence.
 - The next team needs to know what is safe to change, what must be verified, and who must decide.
 
@@ -158,7 +158,10 @@ Start with the reviewers that answer the business concern. Each reviewer is inde
 | `business-continuity` | Can the company demo, deploy, operate, recover, and transfer control if a person, vendor, account, or environment disappears? |
 | `maintenance-cost` | What skill mix, effort, operating burden, and change risk will a small replacement team face? |
 | `product-value` | What customer and business value is demonstrably implemented, partial, promised, or still awaiting sign-off? |
-| `security-privacy` | What material identity, credential-sharing, exposure, privacy, PII, and operating-control risks exist? |
+| `security-privacy` | What material identity, credential-sharing, exposure, privacy, PII, supply-chain, and operating-control baseline risks exist? |
+| `application-security` | Can material application attack paths violate authentication, authorization, confidentiality, integrity, or tenant boundaries? |
+| `cloud-security` | Do the available cloud, IAM, network, deployment, and runtime controls enforce the intended boundaries? |
+| `compliance-assurance` | For named regulatory or assurance baselines, which applicable requirements are evidenced, partial, unknown, or awaiting specialist validation? |
 | `revenue-risk` | What could interrupt demos, sales, pilots, onboarding, renewals, trust, or customer delivery? |
 | `expense-exposure` | What actual or potential cash exposure comes from infrastructure, software, staffing, commitments, and failure modes? |
 | `contributor-vendor-value` | What usable output, ownership, knowledge, handoff, and cost-relative value did people or vendors provide? |
@@ -166,6 +169,14 @@ Start with the reviewers that answer the business concern. Each reviewer is inde
 | `scalability` | Does the product support its realistic business growth envelope across workload, data, operations, third parties, and cost? |
 | `code-quality` | Which code-level risks materially affect correctness, delivery, maintainability, security, or product promises? |
 | `architecture` | Is the current system, its dependencies, ownership, and important decisions understood well enough for safe change? |
+
+Security reviewers may be presented together during onboarding and synthesis,
+but they remain independent packages in the flat dependency graph. Supply-chain
+security starts as baseline boundary triage in `security-privacy`; application
+dependency or build-input exploitability belongs to `application-security`;
+registry, IaC, deployment, and runtime controls belong to `cloud-security`; and
+named C-SCRM or control-mapping requirements belong to
+`compliance-assurance`.
 
 Realignment is not a separate reviewer. When material change is justified by the completed audit, it belongs in the executive summary's 30-90 day plan.
 

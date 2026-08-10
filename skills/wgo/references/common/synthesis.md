@@ -35,6 +35,15 @@ and cross-reviewer consequences. Then create:
 - `technical-lead-notes.md` for traceable technical conclusions and safe
   evolution.
 
+When multiple Security family reviewers are selected, present their reconciled
+conclusions together under the reader-facing security discussion while
+preserving each reviewer's ownership. Do not add a separate umbrella finding or
+duplicate the same control gap. Supply-chain security is synthesized by route:
+baseline trust-boundary signals from Security and Privacy, dependency/build
+exploitability from Application Security, registry/IaC/deployment/runtime
+controls from Cloud Security, and named C-SCRM requirement mapping from
+Compliance Assurance.
+
 For `compare`, also create `comparison.md` from the selected baseline items and
 current reassessment evidence using the Audit Comparison template. State
 prominently that this targeted run did not seek unrelated or newly introduced
