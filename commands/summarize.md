@@ -23,6 +23,9 @@ and `technical-lead-notes.md` at the audit root. Include an owner-assigned
 30–90 day section only where evidence supports it. Do not create a separate
 reconciliation command, decision queue, or action backlog.
 
+After those reports are final, create and validate `manifest.json` from the
+brief's stable business concerns and the executive summary's conclusions.
+
 After synthesis validation succeeds, run the complete `wgo:cost` phase before
 asking about operationalization. It must discover and freeze the audit-session
 manifest itself, select the provider workflow from `audit-brief.md`, use its two

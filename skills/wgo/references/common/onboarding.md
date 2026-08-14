@@ -52,6 +52,9 @@ mode, detailed scope, cutoff, code repositories and refs,
 evidence/documentation sources, selected reviewer IDs and recorded versions,
 installed reviewer versions and paths, substitutions, dependency waves,
 material auditor answers, known unknowns, and success criteria.
+Show the proposed Business Concerns rows with stable IDs; derive them from the
+reused mandate, decision, concerns, and harmful failure mode when an older brief
+does not contain the table.
 
 For `compare` and `blind-compare`, compare every selected baseline reviewer
 version with the currently installed package of the same resolved ID. An
@@ -189,7 +192,6 @@ For a new dated root, create only:
 ```text
 audit-brief.md
 audit-checklist.md
-manifest.json
 evidence/evidence-ledger.md
 evidence/source-access-register.md
 controls/open-items.md
@@ -202,11 +204,10 @@ cutoff, full-folder detailed standard, primary/supporting code repositories,
 evidence and documentation sources, automatic GitHub repository sources, each
 selected reviewer's ID/version/source/absolute package path, substitutions,
 resolved dependency waves, reviewer run disposition, material auditor answers,
-and major unknowns. `manifest.json` starts the machine-readable report contract:
-subject identity, audit type/mode/depth, evidence cutoff, source boundary,
-generator/reviewer provenance, normalized result slots, and relationships. It
-may contain `null`, `[]`, or controlled `unknown` values until synthesis can
-support stronger values; never use TODO placeholders.
+and major unknowns. In every created or updated brief, record each approved
+question, concern, mandate, decision, and harmful failure mode in the Business
+Concerns table with a stable slug ID; preserve the ID when a later audit
+reassesses the same concern.
 The checklist has one task entry per selected reviewer with state, next action,
 recommended next reviewer, and factual closeout condition.
 The ledger records reusable evidence; source access records only material access
@@ -278,8 +279,8 @@ and state the limit only if material.
 
 Do not create claims, collection logs, per-type control registers, status
 tables, coverage maps, additional manifests, handoffs, or reviewer-owned
-folders at onboarding unless a selected output needs one. The canonical
-`manifest.json` is part of the lean start.
+folders at onboarding unless a selected output needs one. Synthesis creates the
+single report manifest after the audience reports are final.
 
 Shared collectors are internal and available by default. Do not discuss packets
 with the auditor; create a packet later when a selected reviewer needs it.
