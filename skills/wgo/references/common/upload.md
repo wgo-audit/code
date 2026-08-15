@@ -30,7 +30,8 @@ Before creating Git state, require all of the following:
    passed.
 7. Every filesystem path in every artifact follows the portable artifact-path
    rule. Reject absolute local paths, drive or UNC paths, home-relative paths,
-   file URLs, traversal segments, credentials, agent session identifiers,
+   file URLs, relative paths that normalize outside the audit root,
+   credentials, agent session identifiers,
    symlinks, `.DS_Store`, nested `.git`, `__MACOSX`, `tmp`, converted-document
    caches, dependency clones, and build output. Report exact offending files;
    do not rewrite or omit them during upload.

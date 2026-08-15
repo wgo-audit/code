@@ -36,8 +36,14 @@ not proof.
 Every filesystem path written to an audit artifact must be portable and
 relative. Use `/` separators in artifacts on every platform.
 
-- A path to another audit artifact is relative to the audit root, for example
-  `controls/open-items.md#OI-003`.
+An internal artifact locator may be relative to the audit root. A Markdown link
+may be relative to the containing artifact with a target inside the audit root.
+Paths inside another source are qualified by a stable source ID.
+
+- A locator for another audit artifact is relative to the audit root, for
+  example `controls/open-items.md#OI-003`. A Markdown link may instead be
+  relative to the containing artifact, including `..` segments, only when its
+  normalized target remains inside the audit root.
 - A path inside an approved repository or document source is qualified by its
   stable source ID and is relative to that source root, for example
   `primary-code:app/models/submission.rb` or
@@ -46,7 +52,8 @@ relative. Use `/` separators in artifacts on every platform.
   `core:references/reviewers/architecture/reviewer.md`; a project extension
   uses `project:plugins/wgo-reviewers/<reviewer-id>/reviewer.md`.
 - Never write a leading `/`, a drive-qualified or UNC path, `~`, `file://`, or
-  a path containing a `..` segment into an audit artifact.
+  a relative path that normalizes outside the audit root into an audit
+  artifact.
 - URLs, repository coordinates, Git refs, and commit SHAs are source
   identities rather than filesystem paths and may remain absolute.
 

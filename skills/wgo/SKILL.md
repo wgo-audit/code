@@ -51,8 +51,9 @@ source-backed artifacts; do not make the auditor administer a process model.
 - Keep implementation, live state, behavior, approval, ownership, cost, and
   future intent distinct. One does not prove another.
 - Do not copy secrets or unnecessary PII. Use redacted locators.
-- Persist only portable relative filesystem paths: audit-root-relative or
-  stable-source-ID-qualified. Absolute paths are transient tool inputs only.
+- Persist only portable relative filesystem paths: audit-root-relative,
+  safely artifact-relative, or stable-source-ID-qualified.
+  Absolute paths are transient tool inputs only.
 - A failed expected-source access attempt needs a remediation, approved
   fallback, or explicit exclusion.
 - Do not install dependencies, restore packages, change lockfiles, deploy,

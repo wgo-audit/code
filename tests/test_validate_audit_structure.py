@@ -144,9 +144,27 @@ class ValidateAuditStructureTests(unittest.TestCase):
             "UNC path",
             "home-relative path",
             "file URL",
-            "parent-traversal path",
+            "parent traversal outside audit root",
         ):
             self.assertTrue(any(label in error for error in errors), label)
+
+    def test_artifact_relative_link_inside_audit_root_is_allowed(self) -> None:
+        self.write(
+            "controls/example.md",
+            "# Example\n\n[Audit brief](../audit-brief.md)\n",
+        )
+        errors = validator.validate(self.root).errors
+        self.assertFalse(any("parent traversal" in error for error in errors))
+
+    def test_task_name_is_not_treated_as_a_filesystem_path(self) -> None:
+        self.write(
+            "controls/cost-manifest.json",
+            '{"wgo_role_task_name":"/root/reviewer",'
+            '"file_path":"/root/private/session.jsonl"}\n',
+        )
+        errors = validator.validate(self.root).errors
+        matching = [error for error in errors if "POSIX absolute local path" in error]
+        self.assertEqual(1, len(matching))
 
     def test_portable_artifact_locators_and_urls_are_allowed(self) -> None:
         self.write(

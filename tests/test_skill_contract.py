@@ -657,7 +657,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Absolute paths are transient tool inputs only", skill)
         for phrase in (
             "Every filesystem path written to an audit artifact must be portable and",
-            "relative to the audit root",
+            "relative to the containing artifact with a target inside the audit root",
             "qualified by its\n  stable source ID",
             "must not copy\nthose runtime paths into the audit brief",
         ):

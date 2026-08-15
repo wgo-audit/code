@@ -243,7 +243,9 @@ NONPORTABLE_PATH_PATTERNS = (
     ("UNC path", re.compile(r"(?<![\\])\\\\[^\s\\/]+[\\/][^\s`|<]+")),
     ("home-relative path", re.compile(r"(?<![A-Za-z0-9])~[\\/][^\s`|<]+")),
     ("file URL", re.compile(r"\bfile://[^\s`|<]+", re.I)),
-    ("parent-traversal path", re.compile(r"(?<![A-Za-z0-9.])\.\.[\\/][^\s`|<]+")),
+)
+PARENT_TRAVERSAL_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9.])\.\.[\\/][^\s`|<]+"
 )
 
 
@@ -741,16 +743,33 @@ def check_secrets(root: Path, result: Result) -> None:
 
 
 def check_portable_paths(root: Path, result: Result) -> None:
+    resolved_root = root.resolve()
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         if path.suffix.lower() not in TEXT_ARTIFACT_SUFFIXES:
             continue
         relative = path.relative_to(root)
         for line_number, line in enumerate(read_text(path, result).splitlines(), 1):
+            path_line = line
+            if path.suffix.lower() == ".json":
+                path_line = re.sub(
+                    r'("wgo_role_task_name"\s*:\s*")[^"]*(")',
+                    r"\1\2",
+                    path_line,
+                )
             for label, pattern in NONPORTABLE_PATH_PATTERNS:
-                if pattern.search(line):
+                if pattern.search(path_line):
                     result.error(
                         f"{relative}:{line_number} contains non-portable path: {label}"
                     )
+            for match in PARENT_TRAVERSAL_PATTERN.finditer(path_line):
+                locator = match.group(0).replace("\\", "/")
+                resolved = (path.parent / locator).resolve()
+                if not resolved.is_relative_to(resolved_root):
+                    result.error(
+                        f"{relative}:{line_number} contains non-portable path: "
+                        "parent traversal outside audit root"
+                    )
+                    break
 
 
 def check_decision_family(
