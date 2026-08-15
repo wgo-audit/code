@@ -675,12 +675,39 @@ class SkillContractTests(unittest.TestCase):
 
         self.assertIn('args: "[YYYYMMDD]"', command)
         self.assertIn("`/wgo-upload [YYYYMMDD]`", command)
+        self.assertIn("The date is optional; when omitted", command)
         self.assertIn("public-only", workflow)
         self.assertIn("portable artifact-path", workflow)
         self.assertIn("Do not call or recreate", workflow)
         self.assertIn("agent's native cross-platform filesystem operations", workflow)
         self.assertIn("Ask for explicit approval", workflow)
-        self.assertIn("Do not modify the source audit root or its manifest", workflow)
+        self.assertIn("without asking the auditor, repair only", workflow)
+        self.assertIn("remove trailing ASCII spaces or tabs from each line", workflow)
+        self.assertIn("ends with exactly one\n  newline", workflow)
+        self.assertIn("do not modify JSON or\nother file types", workflow)
+        self.assertIn("Do not modify the source audit root beyond the", workflow)
+        self.assertIn("never modify its manifest", workflow)
+        self.assertIn("When the date is omitted, resolve exactly the newest dated", workflow)
+        self.assertIn("files named exactly `.DS_Store`", workflow)
+        self.assertIn("That filename is the sole\npackaging exclusion", workflow)
+        self.assertIn("every other\nsource file exists at the same relative path", workflow)
+        for clone_option in (
+            "--depth 1",
+            "--filter=blob:none",
+            "--no-checkout",
+            "--single-branch",
+            "--branch",
+        ):
+            self.assertIn(clone_option, workflow)
+        self.assertIn("promisor\nremote", workflow)
+        self.assertIn("stop instead of falling back to a full clone", workflow)
+        self.assertIn("Configure sparse checkout for only the exact new destination", workflow)
+        self.assertIn("sparse-aware checkout of the fetched default-branch tip", workflow)
+        self.assertIn("bounded index and worktree diff checks", workflow)
+        self.assertIn("do not scan repository-wide\nuntracked or ignored files", workflow)
+        self.assertIn("Do not run `git pull`", workflow)
+        self.assertIn("Force-add that exact destination", workflow)
+        self.assertIn("never force-add a broader path", workflow)
         self.assertIn("draft pull request", workflow)
         self.assertIn("report_repository: wgo-audit/reports", config)
 

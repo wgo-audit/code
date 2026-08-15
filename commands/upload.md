@@ -11,12 +11,15 @@ disable-model-invocation: true
 
 Invoke this as `wgo:upload [YYYYMMDD]` in Codex,
 `/wgo:upload [YYYYMMDD]` in Claude, or `/wgo-upload [YYYYMMDD]` in OpenCode.
+The date is optional; when omitted, use the newest dated audit root.
 
 Load and use the WGO skill, then run its complete
 `references/common/upload.md` workflow. Upload is an explicit public
 publication request, but the workflow still previews and confirms the exact
 repository, destination, commit label, and draft PR before external writes.
 
-Never modify the audit to make it publishable, create or revise its manifest,
-call a report-repository generation script, publish a non-public evidence
-boundary, or overwrite an existing report.
+Automatically repair only the Markdown trailing-whitespace and end-of-file
+blank-line defects defined by the workflow. Never otherwise modify the audit to
+make it publishable, create or revise its manifest, call a report-repository
+generation script, publish a non-public evidence boundary, or overwrite an
+existing report.

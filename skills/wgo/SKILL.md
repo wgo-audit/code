@@ -39,7 +39,8 @@ source-backed artifacts; do not make the auditor administer a process model.
   packet is complete, it refreshes the cost estimate through operationalization.
 - `wgo:upload [YYYYMMDD]` (Codex), `/wgo:upload [YYYYMMDD]` (Claude), or
   `/wgo-upload [YYYYMMDD]` (OpenCode): verify one completed public audit and
-  open a draft report-repository PR without revising the audit.
+  open a draft report-repository PR. It automatically repairs narrow Markdown
+  whitespace defects; the optional date defaults to the newest dated audit root.
 
 ## Rules
 

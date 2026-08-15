@@ -152,9 +152,13 @@ repository subfolders.
 
 `wgo:upload` is a separate publication gate. It accepts only a completed,
 validated `public-only` audit, verifies its final manifest and portable
-relative paths without changing them, then asks before opening a draft PR in
-the configured report repository. It never overwrites a published report or
-calls a report-repository importer or index generator.
+relative paths, and automatically repairs Markdown trailing whitespace and
+extra blank lines at end of file before validation. It then asks before opening
+a draft PR in the configured report repository. Its optional date defaults to
+the newest dated audit. It excludes `.DS_Store` packaging metadata, never
+overwrites a published report, and uses a shallow blobless checkout so existing
+report contents and repository history are not downloaded. It never calls a
+report-repository importer or index generator.
 
 ## Audit Reviewers
 
