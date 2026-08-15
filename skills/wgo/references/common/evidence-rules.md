@@ -31,6 +31,30 @@ not proof.
 6. Never store secret values, session tokens, private keys, credentials, or
    unnecessary PII. Use a redacted locator or classification.
 
+## Portable Artifact Paths
+
+Every filesystem path written to an audit artifact must be portable and
+relative. Use `/` separators in artifacts on every platform.
+
+- A path to another audit artifact is relative to the audit root, for example
+  `controls/open-items.md#OI-003`.
+- A path inside an approved repository or document source is qualified by its
+  stable source ID and is relative to that source root, for example
+  `primary-code:app/models/submission.rb` or
+  `DOCSRC-001:contracts/vendor.pdf`.
+- A core reviewer package uses a portable package locator such as
+  `core:references/reviewers/architecture/reviewer.md`; a project extension
+  uses `project:plugins/wgo-reviewers/<reviewer-id>/reviewer.md`.
+- Never write a leading `/`, a drive-qualified or UNC path, `~`, `file://`, or
+  a path containing a `..` segment into an audit artifact.
+- URLs, repository coordinates, Git refs, and commit SHAs are source
+  identities rather than filesystem paths and may remain absolute.
+
+The coordinator and workers may resolve supplied paths to absolute paths in
+memory and pass absolute paths to tools that require them. They must not copy
+those runtime paths into the audit brief, catalog, ledger, packets, controls,
+reports, manifests, cost evidence, or operator aids.
+
 ## Source Access
 
 An inaccessible expected source is an audit limitation, not evidence that its

@@ -267,7 +267,7 @@ the dependent reviewer is unavailable for that audit.
 An external reviewer with `supersedes` is still optional. If approved:
 
 - it replaces the named core reviewer rather than running beside it;
-- the audit brief records the substitution and absolute package path;
+- the audit brief records the substitution and portable package locator;
 - dependencies on the core ID resolve to the replacement; and
 - WGO asks the auditor to choose if multiple extensions replace the same core
   reviewer.

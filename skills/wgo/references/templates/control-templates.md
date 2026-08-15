@@ -19,12 +19,12 @@ generated reports at synthesis when requested.
 | Mandate and decision enabled | |
 | Detailed standard and cutoff | Detailed; |
 | Current-folder repository scope | Entire current project folder |
-| Primary code repository (URL/origin, ref, local path) | |
-| Supporting code repositories (URL, ref, local path) | |
+| Primary code repository (source ID, URL/origin, ref, portable locator) | |
+| Supporting code repositories (source ID, URL, ref, portable locator) | |
 | Automatic GitHub code repository sources | |
-| Evidence and documentation sources (local folders or GitHub URL/ref) | |
+| Evidence and documentation sources (source ID, portable locator or GitHub URL/ref) | |
 | Source limits | |
-| Selected reviewer packages (ID, version, core/external, absolute path) | |
+| Selected reviewer packages (ID, version, core/external, portable package locator) | |
 | Approved substitutions and resolved dependency waves | |
 | Reviewer run disposition (`fresh`, `complete-missing`, or `rerun-all`) | |
 | Material auditor answers and success boundaries | |

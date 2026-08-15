@@ -126,6 +126,40 @@ class ValidateAuditStructureTests(unittest.TestCase):
         result = validator.validate(self.root)
         self.assertIn("Missing required file: audit-brief.md", result.errors)
 
+    def test_nonportable_artifact_paths_are_errors(self) -> None:
+        self.write(
+            "audit-brief.md",
+            "# Audit Brief\n\n"
+            "- /Users/example/project/source.py\n"
+            "- C:\\Users\\example\\project\\source.py\n"
+            "- \\\\server\\share\\source.py\n"
+            "- ~/project/source.py\n"
+            "- file:///home/example/source.py\n"
+            "- ../outside/source.py\n",
+        )
+        errors = validator.validate(self.root).errors
+        for label in (
+            "POSIX absolute local path",
+            "Windows drive-qualified path",
+            "UNC path",
+            "home-relative path",
+            "file URL",
+            "parent-traversal path",
+        ):
+            self.assertTrue(any(label in error for error in errors), label)
+
+    def test_portable_artifact_locators_and_urls_are_allowed(self) -> None:
+        self.write(
+            "audit-brief.md",
+            "# Audit Brief\n\n"
+            "- controls/open-items.md#OI-003\n"
+            "- primary-code:src/app.py\n"
+            "- DOCSRC-001:contracts/vendor.pdf\n"
+            "- https://github.com/example/project/blob/main/README.md\n",
+        )
+        errors = validator.validate(self.root).errors
+        self.assertFalse(any("non-portable path" in error for error in errors))
+
     def test_manifest_contract_is_enforced(self) -> None:
         self.write(
             "manifest.json",

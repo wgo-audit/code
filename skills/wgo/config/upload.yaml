@@ -1,0 +1,4 @@
+report_repository: wgo-audit/reports
+report_repository_url: https://github.com/wgo-audit/reports.git
+publication_visibility: public
+pull_request_mode: draft

@@ -23,7 +23,8 @@ then:
 
 1. Read the brief, the reviewer card, its relevant predecessor handoffs, and
    only named shared evidence packets and linked artifacts relevant to its question.
-   Use the approved absolute reviewer-package path recorded in the brief.
+   Resolve the approved portable package locator from the brief to an absolute
+   runtime path, verify its ID and version, and do not persist that runtime path.
    On a same-root resume, also read its prior open items and decision
    inventory/register before assigning an OI, ADR, or PDR ID.
 2. When the brief names automatic GitHub code repository sources, create or refresh
@@ -71,8 +72,9 @@ because a different model or platform performs the rerun.
 
 When the brief names automatic
 GitHub code repository sources and its packet is absent or stale, create or refresh
-`github-history-and-hosted-ci.md` once before the first wave. Use the selected
-reviewer package paths and resolved dependency graph recorded in the brief.
+`github-history-and-hosted-ci.md` once before the first wave. Resolve the selected
+reviewer package locators and use the dependency graph recorded in the brief.
+Treat it as the resolved dependency graph for this audit.
 Recheck that no selected IDs conflict and the graph is acyclic. Start every
 currently unblocked reviewer in parallel; after its wave is reconciled, release
 the next unblocked set. A dependency on a superseded core ID resolves to its

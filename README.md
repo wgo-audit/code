@@ -145,9 +145,16 @@ that do not depend on each other.
 | Reconcile findings and generate reports | `wgo:summarize` | `/wgo:summarize` | `/wgo-summarize` |
 | Produce a reconciled API-equivalent audit cost estimate | `wgo:cost` | `/wgo:cost` | `/wgo-cost` |
 | Draft operator aids after approved synthesis | `wgo:operationalize` | `/wgo:operationalize` | `/wgo-operationalize` |
+| Open a draft PR for a completed public audit | `wgo:upload [YYYYMMDD]` | `/wgo:upload [YYYYMMDD]` | `/wgo-upload [YYYYMMDD]` |
 
 The audit always concerns the full project in the current folder, including all
 repository subfolders.
+
+`wgo:upload` is a separate publication gate. It accepts only a completed,
+validated `public-only` audit, verifies its final manifest and portable
+relative paths without changing them, then asks before opening a draft PR in
+the configured report repository. It never overwrites a published report or
+calls a report-repository importer or index generator.
 
 ## Audit Reviewers
 

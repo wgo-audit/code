@@ -53,6 +53,11 @@ Write `<audit-root>/controls/cost-manifest-claude.json`, or
 `cost-manifest-claude-operationalized.json` for the refresh, before calculating.
 Do not rewrite a manifest to make two calculations agree. Include at least:
 
+Resolve Claude's application-data/session root as a transient runtime path.
+Every `file_path` and `metadata_path` persisted in the manifest is portable and
+relative to that root; never store the root or an absolute provider path in an
+audit artifact. Pass the runtime root separately to the one-off recipe.
+
 ```json
 {
   "schema_version": 1,
@@ -81,7 +86,7 @@ Do not rewrite a manifest to make two calculations agree. Include at least:
       "record_set_id": "root-session-uuid",
       "session_id": "root-session-uuid",
       "agent_id": null,
-      "file_path": "/accessible/claude/root-session-uuid.jsonl",
+      "file_path": "root-session-uuid.jsonl",
       "prefix_sha256": "...",
       "wgo_role_task_name": "Claude audit coordinator",
       "phase": "from-markers",
@@ -99,9 +104,9 @@ Do not rewrite a manifest to make two calculations agree. Include at least:
       "record_set_id": "root-session-uuid:agent:abc123",
       "session_id": "root-session-uuid",
       "agent_id": "abc123",
-      "file_path": "/accessible/claude/root-session-uuid/subagents/agent-abc123.jsonl",
+      "file_path": "root-session-uuid/subagents/agent-abc123.jsonl",
       "prefix_sha256": "...",
-      "metadata_path": "/accessible/claude/root-session-uuid/subagents/agent-abc123.meta.json",
+      "metadata_path": "root-session-uuid/subagents/agent-abc123.meta.json",
       "metadata_sha256": "...",
       "tool_use_id": "toolu_123",
       "wgo_role_task_name": "wgo reviewer: security-privacy",
@@ -122,7 +127,7 @@ Do not rewrite a manifest to make two calculations agree. Include at least:
   "exclusions": [
     {
       "record_set_id": "unrelated-session",
-      "file_path": "/accessible/claude/unrelated.jsonl",
+      "file_path": "unrelated.jsonl",
       "decision": "excluded",
       "rationale": "No Agent/Task provenance path from the audit root."
     }
@@ -177,7 +182,7 @@ Run this standard-library recipe independently twice. It writes JSON to stdout
 and creates no helper file.
 
 ```sh
-python3 - /absolute/path/to/cost-manifest-claude.json /absolute/path/to/anthropic-api-rate-card-2026-08-07.json <<'PY'
+python3 - /absolute/path/to/cost-manifest-claude.json /absolute/path/to/anthropic-api-rate-card-2026-08-07.json /absolute/claude/session-store/root <<'PY'
 import hashlib, json, sys
 from collections import defaultdict
 from decimal import Decimal
@@ -186,6 +191,7 @@ from pathlib import Path
 manifest_path = Path(sys.argv[1]).resolve()
 manifest = json.loads(manifest_path.read_text(), parse_float=Decimal)
 rates = json.loads(Path(sys.argv[2]).read_text(), parse_float=Decimal)
+source_root = Path(sys.argv[3]).resolve()
 issues, limitations, duplicates, events, invalid = [], [], [], {}, set()
 rows = defaultdict(lambda: {
     "input_tokens": 0, "cache_write_5m_tokens": 0,
@@ -231,12 +237,15 @@ for session in manifest.get("sessions", []):
     if session.get("decision") != "included":
         continue
     record_set_id = session.get("record_set_id")
-    path = Path(session.get("file_path", ""))
-    if not path.is_absolute():
-        path = manifest_path.parent / path
+    locator = session.get("file_path", "")
+    path = Path(locator)
+    if path.is_absolute() or ".." in path.parts:
+        issues.append({"kind": "nonportable-file-path", "record_set_id": record_set_id})
+        continue
+    path = source_root / path
     if not path.is_file():
         issues.append({"kind": "missing-file", "record_set_id": record_set_id,
-                       "file_path": str(path)})
+                       "file_path": locator})
         continue
     lines = path.read_bytes().splitlines(keepends=True)
     end = session.get("cutoff", {}).get("line_number")
@@ -255,9 +264,13 @@ for session in manifest.get("sessions", []):
                        "record_set_id": record_set_id, "marker": marker})
         continue
     if session.get("root_relationship") == "descendant":
-        meta_path = Path(session.get("metadata_path", ""))
-        if not meta_path.is_absolute():
-            meta_path = manifest_path.parent / meta_path
+        metadata_locator = session.get("metadata_path", "")
+        meta_path = Path(metadata_locator)
+        if meta_path.is_absolute() or ".." in meta_path.parts:
+            issues.append({"kind": "nonportable-metadata-path",
+                           "record_set_id": record_set_id})
+            continue
+        meta_path = source_root / meta_path
         if not meta_path.is_file():
             issues.append({"kind": "missing-subagent-metadata",
                            "record_set_id": record_set_id})
@@ -286,8 +299,11 @@ for session in manifest.get("sessions", []):
                            "record_set_id": record_set_id})
             continue
         parent_path = Path(parent.get("file_path", ""))
-        if not parent_path.is_absolute():
-            parent_path = manifest_path.parent / parent_path
+        if parent_path.is_absolute() or ".." in parent_path.parts:
+            issues.append({"kind": "nonportable-parent-path",
+                           "record_set_id": record_set_id})
+            continue
+        parent_path = source_root / parent_path
         if not parent_path.is_file():
             issues.append({"kind": "missing-parent-file", "record_set_id": record_set_id})
             continue

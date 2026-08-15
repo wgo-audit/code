@@ -235,6 +235,7 @@ require_source ".codex-plugin/plugin.json"
 require_source ".claude-plugin/plugin.json"
 require_source "commands"
 require_source "skills/$PLUGIN_NAME/SKILL.md"
+require_source "skills/$PLUGIN_NAME/config/upload.yaml"
 
 echo "Installing Whats.Going.On. into: $TARGET_DIR"
 install_codegraph
@@ -255,7 +256,7 @@ done
 find "$CODEX_DEST" -name ".DS_Store" -type f -delete
 
 echo "Installing Claude plugin files..."
-for legacy_command in onboard audit status summarize operationalize; do
+for legacy_command in onboard audit status summarize cost operationalize upload; do
   rm -f "$LEGACY_CLAUDE_COMMANDS_DEST/wgo_${legacy_command}.md"
 done
 rm -rf "$LEGACY_CLAUDE_SKILL_DEST"
@@ -265,6 +266,7 @@ copy_dir "$SCRIPT_DIR/.claude-plugin" "$CLAUDE_PLUGIN_DEST/.claude-plugin"
 copy_dir "$SCRIPT_DIR/commands" "$CLAUDE_PLUGIN_DEST/commands"
 copy_dir "$SCRIPT_DIR/skills/$PLUGIN_NAME/references" "$CLAUDE_PLUGIN_DEST/references"
 copy_dir "$SCRIPT_DIR/skills/$PLUGIN_NAME/scripts" "$CLAUDE_PLUGIN_DEST/scripts"
+copy_dir "$SCRIPT_DIR/skills/$PLUGIN_NAME/config" "$CLAUDE_PLUGIN_DEST/config"
 filter_frontmatter "$SCRIPT_DIR/skills/$PLUGIN_NAME/SKILL.md" "$CLAUDE_PLUGIN_DEST/SKILL.md" claude
 for command in "$SCRIPT_DIR"/commands/*.md; do
   filter_frontmatter "$command" "$CLAUDE_PLUGIN_DEST/commands/$(basename "$command")" claude
@@ -273,7 +275,7 @@ find "$CLAUDE_PLUGIN_DEST" -name ".DS_Store" -type f -delete
 
 echo "Installing OpenCode command files..."
 mkdir -p "$OPENCODE_COMMANDS_DEST"
-for command_name in onboard audit status summarize operationalize; do
+for command_name in onboard audit status summarize cost operationalize upload; do
   rm -f "$OPENCODE_COMMANDS_DEST/wgo-${command_name}.md"
   render_opencode_command \
     "$SCRIPT_DIR/commands/${command_name}.md" \
@@ -283,6 +285,7 @@ rm -rf "$OPENCODE_SKILL_DEST"
 mkdir -p "$OPENCODE_SKILL_DEST"
 copy_dir "$SCRIPT_DIR/skills/$PLUGIN_NAME/references" "$OPENCODE_SKILL_DEST/references"
 copy_dir "$SCRIPT_DIR/skills/$PLUGIN_NAME/scripts" "$OPENCODE_SKILL_DEST/scripts"
+copy_dir "$SCRIPT_DIR/skills/$PLUGIN_NAME/config" "$OPENCODE_SKILL_DEST/config"
 filter_frontmatter "$SCRIPT_DIR/skills/$PLUGIN_NAME/SKILL.md" "$OPENCODE_SKILL_DEST/SKILL.md" opencode-skill
 find "$OPENCODE_SKILL_DEST" -name ".DS_Store" -type f -delete
 

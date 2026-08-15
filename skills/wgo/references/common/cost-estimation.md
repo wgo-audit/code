@@ -71,12 +71,17 @@ must list delegated earlier cost sessions as explicit exclusions and exclude
 same-session cost requests through its phase policy. It must contain, at
 minimum:
 
+Resolve the Codex session-store root as a transient runtime path. Every
+`file_path` persisted in the manifest is a portable path relative to that root;
+never store the root or an absolute session path in an audit artifact. Pass the
+runtime root separately to the one-off recipe.
+
 ```json
 {
   "schema_version": 2,
   "coverage": "audit",
   "root_session_id": "ses_root",
-  "session_search_roots": ["/accessible/codex/sessions"],
+  "session_store": "codex-session-store",
   "pricing_basis": {
     "rate_card": "references/data/api-rate-card-2026-08-07.json",
     "default_service_tier_when_not_returned": "standard",
@@ -102,7 +107,7 @@ minimum:
   "sessions": [
     {
       "session_id": "ses_root",
-      "file_path": "/accessible/codex/sessions/root.jsonl",
+      "file_path": "2026/08/06/root.jsonl",
       "prefix_sha256": "...",
       "wgo_role_task_name": "Terra audit coordinator",
       "phase": "from-markers",
@@ -118,7 +123,7 @@ minimum:
     },
     {
       "session_id": "ses_child",
-      "file_path": "/accessible/codex/sessions/child.jsonl",
+      "file_path": "2026/08/06/child.jsonl",
       "prefix_sha256": "...",
       "wgo_role_task_name": "wgo reviewer: code-quality",
       "phase": "audit",
@@ -140,7 +145,7 @@ minimum:
   "exclusions": [
     {
       "session_id": "ses_unrelated",
-      "file_path": "/accessible/codex/sessions/unrelated.jsonl",
+      "file_path": "2026/08/06/unrelated.jsonl",
       "decision": "excluded",
       "rationale": "No recorded spawn and task-lifecycle path from ses_root."
     }
@@ -148,8 +153,9 @@ minimum:
 }
 ```
 
-Record every included and excluded session, including: session ID and file
-path; WGO role/task name; parent/root relationship; inclusion/exclusion
+Record every included and excluded session, including: session ID and the
+portable path relative to the transient Codex session-store root; WGO role/task
+name; parent/root relationship; inclusion/exclusion
 decision and rationale; spawn/lifecycle evidence; exact child-specific
 `session_meta` line; descendant lifecycle start and terminal boundaries; exact
 cutoff; SHA-256 of the exact cutoff byte prefix; and the inspected usage schema. The
@@ -162,7 +168,8 @@ earlier cost coordinator/worker session. Do not treat an uninspected field name
 as a known schema.
 
 For an operationalization refresh, use the immutable audit-only manifest as the
-frozen audit baseline. Record its path and SHA-256 in `prior_manifest`, verify
+frozen audit baseline. Record its audit-root-relative path and SHA-256 in
+`prior_manifest`, verify
 that file and every original cutoff prefix, then add only the current
 operationalization root/session and its recorded descendants. If
 operationalization continues in the audit root session, extend that session's
@@ -250,7 +257,7 @@ card are accessible. It writes JSON to stdout and creates no helper file. The
 manifest must first record the inspected Codex rollout `token_count` schema.
 
 ```sh
-python3 - /absolute/path/to/cost-manifest.json /absolute/path/to/api-rate-card-2026-08-07.json <<'PY'
+python3 - /absolute/path/to/cost-manifest.json /absolute/path/to/api-rate-card-2026-08-07.json /absolute/codex/session-store/root <<'PY'
 import hashlib, json, sys
 from collections import defaultdict
 from decimal import Decimal
@@ -259,6 +266,7 @@ from pathlib import Path
 manifest_path = Path(sys.argv[1]).resolve()
 manifest = json.loads(manifest_path.read_text(), parse_float=Decimal)
 rates = json.loads(Path(sys.argv[2]).read_text(), parse_float=Decimal)
+source_root = Path(sys.argv[3]).resolve()
 issues, limitations, seen, legacy_states = [], [], {}, {}
 duplicates, excluded_requests = [], []
 rows = defaultdict(lambda: {
@@ -315,27 +323,36 @@ def lifecycle_event(record):
 
 prior_manifest = manifest.get("prior_manifest")
 if isinstance(prior_manifest, dict):
-    prior_path = Path(prior_manifest.get("file_path", ""))
-    if not prior_path.is_absolute():
+    prior_locator = prior_manifest.get("file_path", "")
+    prior_path = Path(prior_locator)
+    if prior_path.is_absolute() or ".." in prior_path.parts:
+        issues.append({"kind": "nonportable-prior-manifest-path"})
+        prior_path = None
+    else:
         prior_path = manifest_path.parent / prior_path
-    if not prior_path.is_file():
-        issues.append({"kind": "missing-prior-manifest", "file_path": str(prior_path)})
+    if prior_path is None:
+        pass
+    elif not prior_path.is_file():
+        issues.append({"kind": "missing-prior-manifest", "file_path": prior_locator})
     else:
         prior_digest = hashlib.sha256(prior_path.read_bytes()).hexdigest()
         if prior_digest != prior_manifest.get("sha256"):
-            issues.append({"kind": "changed-prior-manifest", "file_path": str(prior_path),
+            issues.append({"kind": "changed-prior-manifest", "file_path": prior_locator,
                            "expected_sha256": prior_manifest.get("sha256"),
                            "actual_sha256": prior_digest})
 
 for session in manifest["sessions"]:
     if session["decision"] != "included":
         continue
-    path = Path(session["file_path"])
-    if not path.is_absolute():
-        path = manifest_path.parent / path
+    locator = session["file_path"]
+    path = Path(locator)
+    if path.is_absolute() or ".." in path.parts:
+        issues.append({"kind": "nonportable-file-path", "session_id": session["session_id"]})
+        continue
+    path = source_root / path
     session_id, cutoff = session["session_id"], session["cutoff"]
     if not path.is_file():
-        issues.append({"kind": "missing-file", "session_id": session_id, "file_path": str(path)})
+        issues.append({"kind": "missing-file", "session_id": session_id, "file_path": locator})
         continue
     byte_lines = path.read_bytes().splitlines(keepends=True)
     end_line = cutoff.get("line_number")

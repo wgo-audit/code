@@ -431,8 +431,11 @@ generator commit, runtime version, or model IDs.
   versions, relationships, sources, or conclusions.
 - Omit unsupported optional fields. Use `null`, `[]`, or a controlled `unknown`
   value only where the retained field is genuinely unknown.
-- Never ship unresolved placeholders, absolute local paths, credentials, or
-  agent session identifiers.
+- Every filesystem path in every audit artifact is portable and relative:
+  audit-artifact paths are relative to the audit root, and source paths use a
+  stable source ID plus a path relative to that source root. Never ship
+  unresolved placeholders, absolute local paths, credentials, or agent session
+  identifiers.
 - `subject.id` must match the published subject directory.
 - `evidence.cutoff` must match the published cutoff directory.
 - `report.entrypoint` must exist in the report package.
