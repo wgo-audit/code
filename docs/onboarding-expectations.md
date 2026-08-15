@@ -54,7 +54,7 @@ primary code, any additional code repositories, then supporting records.
 | Harmful failure to avoid | “Accepting the handoff, then discovering production cannot be recovered.” | Sets the consequence against which risks and priorities are judged. |
 | Evidence cutoff | “Use evidence available through 2026-07-24.” | Keeps history, documents, and observations time-bounded and reproducible. |
 | Report audiences | “The founder, product lead, and incoming technical lead.” | Shapes the executive summary, product-manager notes, and technical-lead notes. |
-| Reviewers | “Add Security and Privacy; omit Expense Exposure because billing is out of scope.” | Confirms the perspectives that will run. WGO records each selected reviewer's declared version, names discovered project-local extensions as optional choices, and calculates dependency waves. |
+| Reviewers | “Add Security and Privacy and Application Security; omit Expense Exposure because billing is out of scope.” | Confirms the perspectives that will run. WGO may present related Security reviewers together, but records each selected reviewer's declared version, names discovered project-local extensions as optional choices, and calculates dependency waves. |
 | Success criteria | “Give the incoming maintainer a prioritized, evidence-backed list of blockers and safe next steps.” | Defines what synthesis must demonstrate before the audit is useful. If two valid outcomes would lead to different conclusions, WGO asks one focused distinction. |
 
 For the evidence-and-documentation source list, give one local folder or GitHub

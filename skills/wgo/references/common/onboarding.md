@@ -133,6 +133,21 @@ core reviewers WGO recommends, any it will not run with a reason, and every
 external reviewer as an optional addition. Name any proposed core substitution.
 External reviewers and substitutions always require auditor approval.
 
+Present Security as a reviewer family during recommendation, but record and run
+only the selected flat reviewer IDs. Recommend `security-privacy` for normal
+security-relevant audits; add `application-security` when custom application
+code, exposed APIs, tenant boundaries, or dependency/build-input exploitability
+is material; add `cloud-security` when cloud, IAM, network, deployment,
+registry, runtime, or live-environment evidence is in scope; add
+`compliance-assurance` when the mandate names a regulation, standard,
+contractual control baseline, privacy baseline, certification, customer
+assurance, or C-SCRM mapping decision and its prerequisites are selected.
+Supply-chain security starts as baseline boundary triage in `security-privacy`;
+route application dependency/build-input exploitability to
+`application-security`, registry/IaC/deployment/runtime controls to
+`cloud-security`, and named C-SCRM requirement mapping to
+`compliance-assurance`.
+
 For an approved external reviewer, run its platform `validate_install` by
 absolute path when present. No validator means no installation is needed. A
 zero exit means ready. On any other exit, pause and tell the auditor to run the
