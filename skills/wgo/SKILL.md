@@ -124,7 +124,8 @@ reading an output template that has not been selected.
   discover and freeze the audit-session manifest before calculation, run
   exactly two independent provider-specific verification passes over that same
   manifest, and write `controls/cost-estimate.md` with its frozen calculation
-  evidence. A missing or unsupported platform is `Unreconciled`, never an
+  evidence, then refresh `manifest.json`'s lean cost summary. A missing or
+  unsupported platform is `Unreconciled`, never an
   invitation to inspect another provider's records.
 - Operationalize: `references/common/operationalization.md`,
   `references/common/evidence-rules.md`, the selected template(s), and then

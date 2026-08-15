@@ -8,6 +8,7 @@ import json
 import re
 import sys
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 
@@ -146,6 +147,8 @@ MANIFEST_REVIEWER_STATUSES = {
     "not-applicable",
 }
 MANIFEST_CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
+MANIFEST_COST_COVERAGE = {"audit", "audit-and-operationalization"}
+MANIFEST_COST_STATUSES = {"final", "unreconciled"}
 FULL_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$", re.I)
 CHECKLIST_STATES = {
     "confirmed",
@@ -332,6 +335,20 @@ def contains_placeholder(value: object) -> bool:
     return False
 
 
+def is_nonnegative_cent_amount(value: object) -> bool:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    amount = Decimal(str(value))
+    try:
+        return (
+            amount.is_finite()
+            and amount >= 0
+            and amount == amount.quantize(Decimal("0.01"))
+        )
+    except InvalidOperation:
+        return False
+
+
 def check_manifest(root: Path, result: Result) -> None:
     path = root / "manifest.json"
     if not path.is_file():
@@ -488,6 +505,74 @@ def check_manifest(root: Path, result: Result) -> None:
             result.error(
                 f"manifest.json execution.reviewers[{index}].status is invalid: {status}"
             )
+
+    cost_estimate = execution.get("costEstimate")
+    if cost_estimate is not None:
+        if not isinstance(cost_estimate, dict):
+            result.error("manifest.json execution.costEstimate must be an object or null")
+        else:
+            if cost_estimate.get("basis") != "api-equivalent":
+                result.error(
+                    "manifest.json execution.costEstimate.basis must be api-equivalent"
+                )
+            coverage = cost_estimate.get("coverage")
+            if coverage not in MANIFEST_COST_COVERAGE:
+                result.error(
+                    "manifest.json execution.costEstimate.coverage is invalid: "
+                    f"{coverage}"
+                )
+            cost_status = cost_estimate.get("status")
+            if cost_status not in MANIFEST_COST_STATUSES:
+                result.error(
+                    "manifest.json execution.costEstimate.status is invalid: "
+                    f"{cost_status}"
+                )
+            if cost_estimate.get("currency") != "USD":
+                result.error(
+                    "manifest.json execution.costEstimate.currency must be USD"
+                )
+
+            total = cost_estimate.get("totalUsd")
+            if "totalUsd" not in cost_estimate:
+                result.error(
+                    "manifest.json execution.costEstimate missing field: totalUsd"
+                )
+            if cost_status == "final" and not is_nonnegative_cent_amount(total):
+                result.error(
+                    "manifest.json execution.costEstimate.totalUsd must be a "
+                    "non-negative dollars-and-cents number for final status"
+                )
+            if cost_status == "unreconciled" and total is not None:
+                result.error(
+                    "manifest.json execution.costEstimate.totalUsd must be null "
+                    "for unreconciled status"
+                )
+
+            if "reconciledSubtotalUsd" in cost_estimate:
+                subtotal = cost_estimate.get("reconciledSubtotalUsd")
+                if not is_nonnegative_cent_amount(subtotal):
+                    result.error(
+                        "manifest.json execution.costEstimate.reconciledSubtotalUsd "
+                        "must be a non-negative dollars-and-cents number"
+                    )
+                if cost_status == "final":
+                    result.error(
+                        "manifest.json execution.costEstimate.reconciledSubtotalUsd "
+                        "must be omitted for final status"
+                    )
+
+            source = cost_estimate.get("source")
+            source_path = source.split("#", 1)[0] if isinstance(source, str) else ""
+            if not source_path or Path(source_path).is_absolute():
+                result.error(
+                    "manifest.json execution.costEstimate.source must be a "
+                    "relative report path"
+                )
+            elif not (root / source_path).is_file():
+                result.error(
+                    "manifest.json execution.costEstimate.source does not exist: "
+                    f"{source}"
+                )
     if not isinstance(data.get("relationships"), dict):
         result.error("manifest.json relationships must be an object")
 

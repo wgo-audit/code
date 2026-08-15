@@ -72,3 +72,26 @@ State that this is an API-equivalent estimate rather than a Codex, Claude, or
 OpenCode/provider invoice and that cost-calculation requests are excluded. List
 material evidence, schema, pricing, attribution, and rounding limitations.
 ```
+
+After every calculation or refresh, update `manifest.json` at
+`execution.costEstimate` and validate the manifest again:
+
+```json
+{
+  "basis": "api-equivalent",
+  "coverage": "audit",
+  "status": "final",
+  "currency": "USD",
+  "totalUsd": 12.35,
+  "source": "controls/cost-estimate.md"
+}
+```
+
+Round manifest monetary values half up from the exact machine-readable result
+to dollars and cents; never store fractions of a cent there. Keep exact values
+only in the frozen calculation evidence. Set `coverage` to `audit` or
+`audit-and-operationalization`. For an `unreconciled` result, set `totalUsd` to
+`null`; when the control reports a subtotal for reconciled included evidence,
+add `reconciledSubtotalUsd`, rounded the same way. Never label that subtotal as
+a total. Replace the previous object on refresh; do not append cost history or
+copy token/model tables into the report manifest.

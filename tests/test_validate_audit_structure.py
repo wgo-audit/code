@@ -216,6 +216,65 @@ class ValidateAuditStructureTests(unittest.TestCase):
                     expected,
                 )
 
+    def test_manifest_cost_summary_is_validated(self) -> None:
+        self.write("index.md")
+        self.write("executive-summary.md")
+        self.write("controls/cost-estimate.md")
+        self.write_manifest()
+        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+        valid_cost = {
+            "basis": "api-equivalent",
+            "coverage": "audit",
+            "status": "final",
+            "currency": "USD",
+            "totalUsd": 12.35,
+            "source": "controls/cost-estimate.md",
+        }
+        manifest["execution"]["costEstimate"] = valid_cost
+        self.write("manifest.json", json.dumps(manifest))
+        result = validator.Result()
+        validator.check_manifest(self.root, result)
+        self.assertEqual([], result.errors)
+
+        unreconciled = dict(valid_cost)
+        unreconciled.update(
+            {
+                "status": "unreconciled",
+                "totalUsd": None,
+                "reconciledSubtotalUsd": 11.25,
+            }
+        )
+        manifest["execution"]["costEstimate"] = unreconciled
+        self.write("manifest.json", json.dumps(manifest))
+        result = validator.Result()
+        validator.check_manifest(self.root, result)
+        self.assertEqual([], result.errors)
+
+        cases = (
+            ([], "must be an object or null"),
+            ({**valid_cost, "basis": "invoice"}, "basis must be api-equivalent"),
+            ({**valid_cost, "coverage": "all"}, "coverage is invalid"),
+            ({**valid_cost, "status": "partial"}, "status is invalid"),
+            ({**valid_cost, "currency": "CAD"}, "currency must be USD"),
+            ({key: value for key, value in valid_cost.items() if key != "totalUsd"}, "missing field: totalUsd"),
+            ({**valid_cost, "totalUsd": None}, "dollars-and-cents number for final"),
+            ({**valid_cost, "totalUsd": 12.345}, "dollars-and-cents number for final"),
+            ({**unreconciled, "totalUsd": 11.25}, "must be null for unreconciled"),
+            ({**unreconciled, "reconciledSubtotalUsd": -1}, "dollars-and-cents number"),
+            ({**unreconciled, "reconciledSubtotalUsd": 11.255}, "dollars-and-cents number"),
+            ({**valid_cost, "reconciledSubtotalUsd": 12.35}, "must be omitted for final"),
+            ({**valid_cost, "source": "/tmp/cost.md"}, "must be a relative report path"),
+            ({**valid_cost, "source": "controls/missing.md"}, "source does not exist"),
+        )
+        for cost_estimate, expected in cases:
+            with self.subTest(cost_estimate=cost_estimate):
+                candidate = json.loads(json.dumps(manifest))
+                candidate["execution"]["costEstimate"] = cost_estimate
+                self.write("manifest.json", json.dumps(candidate))
+                result = validator.Result()
+                validator.check_manifest(self.root, result)
+                self.assertTrue(any(expected in error for error in result.errors), expected)
+
     def test_manifest_rejects_missing_keys_and_invalid_json_roots(self) -> None:
         self.write("manifest.json", "not json")
         self.assertTrue(any("invalid JSON" in error for error in validator.validate(self.root).errors))

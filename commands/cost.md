@@ -25,7 +25,9 @@ than guessing.
 
 This is a read-only analysis of accessible provider-native session records that
 writes `<audit-root>/controls/cost-estimate.md` and its frozen calculation
-evidence.
+evidence, then updates `<audit-root>/manifest.json` at
+`execution.costEstimate` with the result's exact total or explicitly labeled
+unreconciled subtotal.
 Do not install a package, invoke `ccusage`, add a helper program, or use an
 OS-specific binary.
 The active-platform coordinator discovers the audit descendants from recorded
@@ -34,3 +36,6 @@ calculation, and runs exactly two independent calculations over that unchanged
 manifest using the worker configuration in the selected provider workflow.
 Never identify an included session solely by date, CWD, folder, or model; those
 may corroborate recorded provenance only.
+After every calculation or refresh, follow
+`references/templates/cost-estimate-template.md` to replace the manifest cost
+summary and validate `manifest.json` again.

@@ -66,3 +66,7 @@ audit-only manifest and verification outputs. Exclude both cost-calculation
 phases from the estimate itself. If the refreshed result is unreconciled,
 publish that status and its exact limitations rather than retaining the earlier
 precise total as though it included operationalization.
+Replace `manifest.json`'s `execution.costEstimate` with the refreshed
+`audit-and-operationalization` summary defined in
+`references/templates/cost-estimate-template.md`, then validate the manifest
+again.

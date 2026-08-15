@@ -13,13 +13,15 @@ small, machine-readable index that tells WGO and future processors:
 - why the audit was performed and what it concluded;
 - which evidence boundary applies;
 - how the report was produced; and
+- the latest API-equivalent execution-cost result, when calculated; and
 - how it relates to previous or comparison reports.
 
 The report remains authoritative. The manifest does not copy findings,
 recommendations, evidence, open items, or report prose.
 
-WGO creates the manifest once, after `executive-summary.md` and the other
-audience reports are final. Onboarding records stable business-concern IDs in
+WGO creates the initial manifest after `executive-summary.md` and the other
+audience reports are final, then updates its cost summary after every cost
+calculation or refresh. Onboarding records stable business-concern IDs in
 `audit-brief.md`; upload verifies and packages the completed manifest but does
 not create or revise it.
 
@@ -48,7 +50,7 @@ not create or revise it.
 | `audit` | Assessment type, mode, and depth. |
 | `businessConcerns` | Reasons for the audit paired with their conclusions. |
 | `evidence` | Cutoff, pinned sources, access boundary, and limitations. |
-| `execution` | Generator and reviewer provenance needed for repeatability. |
+| `execution` | Generator, reviewer, and latest cost-estimate provenance needed for repeatability. |
 | `relationships` | Links to previous, baseline, comparison, or superseded reports. |
 
 Do not add website presentation fields, mutable Git or pull-request state,
@@ -219,6 +221,33 @@ Reviewer status values are `completed`, `partial`, `not-run`, `failed`, and
 `not-applicable`. A missing or null version must never be interpreted as
 version `0`.
 
+### Cost Estimate
+
+After every cost calculation or refresh, WGO stores one lean summary at
+`execution.costEstimate`:
+
+```json
+"costEstimate": {
+  "basis": "api-equivalent",
+  "coverage": "audit",
+  "status": "final",
+  "currency": "USD",
+  "totalUsd": 12.35,
+  "source": "controls/cost-estimate.md"
+}
+```
+
+`coverage` is `audit` or `audit-and-operationalization`; a later calculation
+replaces the earlier object. `status` is `final` or `unreconciled`. Round
+manifest monetary values half up to dollars and cents; exact fractional values
+remain in the linked calculation evidence. For an unreconciled result, set
+`totalUsd` to `null` and optionally include `reconciledSubtotalUsd` when the
+detailed control supports a subtotal for included evidence. The linked control
+remains authoritative for models, tokens, pricing inputs, exclusions, and
+limitations.
+The field may be `null` only before WGO's first cost calculation, and may be
+omitted by another generator that does not calculate cost.
+
 ## Relationships
 
 ```json
@@ -376,7 +405,16 @@ generator commit, runtime version, or model IDs.
       { "id": "scalability", "version": "0.2", "status": "completed" },
       { "id": "security-privacy", "version": "0.2", "status": "completed" }
     ],
-    "acceptedVariances": []
+    "acceptedVariances": [],
+    "costEstimate": {
+      "basis": "api-equivalent",
+      "coverage": "audit",
+      "status": "unreconciled",
+      "currency": "USD",
+      "totalUsd": null,
+      "reconciledSubtotalUsd": 151.49,
+      "source": "controls/cost-estimate.md"
+    }
   },
   "relationships": {
     "previousAudit": null,
@@ -401,11 +439,16 @@ generator commit, runtime version, or model IDs.
 - Business-concern IDs must be unique within the report.
 - Git commits must be full 40-character SHAs when present.
 - Every WGO reviewer entry must include `id`, `version`, and `status`.
+- A final cost must have a non-negative `totalUsd` rounded to cents; an
+  unreconciled result must use `null` and must not disguise a partial subtotal
+  as the total.
+- `execution.costEstimate.source` must be a relative path to an existing
+  report artifact.
 - Relationship values must identify reports, not filesystem locations.
 
 ## Deliberate Omissions
 
 The manifest does not contain the complete mandate, detailed findings,
-recommendations, open items, evidence ledger, cost-calculation records, report
-file inventory, website labels, badges, or mutable publication state. Those
-remain in their source artifacts or are derived by processors.
+recommendations, open items, evidence ledger, detailed cost-calculation
+records, report file inventory, website labels, badges, or mutable publication
+state. Those remain in their source artifacts or are derived by processors.

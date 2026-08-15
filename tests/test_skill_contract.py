@@ -421,6 +421,8 @@ class SkillContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
         command = (ROOT / "commands/operationalize.md").read_text(encoding="utf-8")
+        cost_command = (ROOT / "commands/cost.md").read_text(encoding="utf-8")
+        summarize_command = (ROOT / "commands/summarize.md").read_text(encoding="utf-8")
 
         self.assertIn("WGO_PHASE_ONBOARDING_START", onboarding)
         self.assertIn("WGO_PHASE_AUDIT_START", audit)
@@ -444,6 +446,12 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("## Token Totals By Session And Model", cost_template)
         self.assertIn("Update\n  `controls/cost-estimate.md`", command)
         self.assertIn("preserve the frozen\naudit-only manifest", operationalization)
+        self.assertIn("execution.costEstimate", cost_template)
+        self.assertIn("reconciledSubtotalUsd", cost_template)
+        self.assertIn("execution.costEstimate", cost_command)
+        self.assertIn("execution.costEstimate", summarize_command)
+        self.assertIn("execution.costEstimate", command)
+        self.assertIn("Replace `manifest.json`'s `execution.costEstimate`", operationalization)
 
     def test_cost_fixture_bounds_full_history_and_suppresses_unchanged_echoes(self) -> None:
         fixture = SKILL / "references/fixtures/cost-estimation"
@@ -628,12 +636,14 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("duplicate business concern id", validator)
         self.assertIn("execution.reviewers", validator)
         self.assertIn("After the four audience reports are final", synthesis)
-        self.assertIn("create `manifest.json` once", normalized_synthesis)
+        self.assertIn("create the initial `manifest.json`", normalized_synthesis)
         self.assertIn("executive summary answers every Business Concerns row", normalized_synthesis)
         self.assertIn("state `unknown` when the evidence cannot answer it", normalized_synthesis)
         self.assertIn("| ID | Type | Approved statement |", normalized_templates)
         self.assertIn('"$schema": "https://wgo-audit.com/schemas/manifest/1.0.0.json"', manifest_template)
         self.assertIn('"businessConcerns": []', manifest_template)
+        self.assertIn('"costEstimate": null', manifest_template)
+        self.assertIn("execution.costEstimate", synthesis)
         self.assertIn("Machine-readable identity, provenance, evidence boundary", readme)
 
     def test_source_bounded_diagrams_are_explicit(self) -> None:

@@ -28,7 +28,8 @@
     "generator": {
       "name": "wgo-audit"
     },
-    "reviewers": []
+    "reviewers": [],
+    "costEstimate": null
   },
   "relationships": {
     "previousAudit": null,
