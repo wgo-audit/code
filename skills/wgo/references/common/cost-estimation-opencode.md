@@ -52,6 +52,11 @@ or same-day sessions considered and excluded for lacking the parent/child path.
 Write `<audit-root>/controls/cost-manifest-opencode.json`, or
 `cost-manifest-opencode-operationalized.json` for a refresh, before calculating:
 
+Keep validated exports under one transient export root. Every `export_path`
+persisted in the manifest is portable and relative to that root; never store
+the root or an absolute export path in an audit artifact. Pass the runtime root
+separately to the one-off recipe.
+
 ```json
 {
   "schema_version": 1,
@@ -78,7 +83,7 @@ Write `<audit-root>/controls/cost-manifest-opencode.json`, or
   "sessions": [
     {
       "session_id": "ses_root",
-      "export_path": "/audit/evidence/opencode/ses_root.json",
+      "export_path": "ses_root.json",
       "export_sha256": "...",
       "wgo_role_task_name": "OpenCode audit coordinator",
       "phase": "from-markers",
@@ -95,7 +100,7 @@ Write `<audit-root>/controls/cost-manifest-opencode.json`, or
     },
     {
       "session_id": "ses_child",
-      "export_path": "/audit/evidence/opencode/ses_child.json",
+      "export_path": "ses_child.json",
       "export_sha256": "...",
       "wgo_role_task_name": "wgo reviewer: architecture",
       "phase": "audit",
@@ -117,7 +122,7 @@ Write `<audit-root>/controls/cost-manifest-opencode.json`, or
   "exclusions": [
     {
       "session_id": "ses_unrelated",
-      "export_path": "/audit/evidence/opencode/ses_unrelated.json",
+      "export_path": "ses_unrelated.json",
       "decision": "excluded",
       "rationale": "No task/parent path from ses_root."
     }
@@ -164,7 +169,7 @@ Run this standard-library recipe independently twice. It writes JSON to stdout
 and creates no helper file.
 
 ```sh
-python3 - /absolute/path/to/cost-manifest-opencode.json /absolute/path/to/opencode-cost-basis-2026-08-07.json <<'PY'
+python3 - /absolute/path/to/cost-manifest-opencode.json /absolute/path/to/opencode-cost-basis-2026-08-07.json /absolute/opencode/export/root <<'PY'
 import hashlib, json, sys
 from collections import defaultdict
 from decimal import Decimal
@@ -173,6 +178,7 @@ from pathlib import Path
 manifest_path = Path(sys.argv[1]).resolve()
 manifest = json.loads(manifest_path.read_text(), parse_float=Decimal)
 basis = json.loads(Path(sys.argv[2]).read_text(), parse_float=Decimal)
+source_root = Path(sys.argv[3]).resolve()
 issues, duplicates, events = [], [], {}
 rows = defaultdict(lambda: {
     "input_tokens": 0, "cache_read_tokens": 0, "cache_write_tokens": 0,
@@ -233,12 +239,15 @@ for session in manifest.get("sessions", []):
     if session.get("decision") != "included":
         continue
     session_id = session.get("session_id")
-    path = Path(session.get("export_path", ""))
-    if not path.is_absolute():
-        path = manifest_path.parent / path
+    locator = session.get("export_path", "")
+    path = Path(locator)
+    if path.is_absolute() or ".." in path.parts:
+        issues.append({"kind": "nonportable-export-path", "session_id": session_id})
+        continue
+    path = source_root / path
     if not path.is_file():
         issues.append({"kind": "missing-export", "session_id": session_id,
-                       "export_path": str(path)})
+                       "export_path": locator})
         continue
     raw = path.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
@@ -280,8 +289,10 @@ for session in manifest.get("sessions", []):
             issues.append({"kind": "missing-parent-task", "session_id": session_id})
             continue
         parent_path = Path(parent.get("export_path", ""))
-        if not parent_path.is_absolute():
-            parent_path = manifest_path.parent / parent_path
+        if parent_path.is_absolute() or ".." in parent_path.parts:
+            issues.append({"kind": "nonportable-parent-export", "session_id": session_id})
+            continue
+        parent_path = source_root / parent_path
         if not parent_path.is_file():
             issues.append({"kind": "missing-parent-export", "session_id": session_id})
             continue

@@ -74,6 +74,7 @@ def run_provider_cost_fixture(
             "-",
             str(fixture / manifest_name),
             str(SKILL / f"references/data/{basis_name}"),
+            str(fixture),
         ],
         input=match.group("recipe"),
         text=True,
@@ -271,7 +272,7 @@ class SkillContractTests(unittest.TestCase):
             "Freeze the factual classification, reviewer routing, summary, and limits before the second pass.",
             "Referenced Content Outside The Corpus",
             "Documentation Coverage Signals",
-            "repository URL/ref/ resolved commit/local-root mappings",
+            "repository URL/ref/resolved commit/source-ID mappings",
             "map the repository and path to its prepared local clone",
             "ignore page navigation, same-page anchors, assets, scripts, styles, fonts",
             "resolved-in-corpus",
@@ -660,6 +661,70 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn('"costEstimate": null', manifest_template)
         self.assertIn("execution.costEstimate", synthesis)
         self.assertIn("Machine-readable identity, provenance, evidence boundary", readme)
+
+    def test_artifact_paths_are_portable_and_relative(self) -> None:
+        skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        evidence = (SKILL / "references/common/evidence-rules.md").read_text(encoding="utf-8")
+        onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
+        documentation = (SKILL / "references/common/documentation-prep.md").read_text(encoding="utf-8")
+        templates = (SKILL / "references/templates/control-templates.md").read_text(encoding="utf-8")
+
+        self.assertIn("Absolute paths are transient tool inputs only", skill)
+        for phrase in (
+            "Every filesystem path written to an audit artifact must be portable and",
+            "relative to the containing artifact with a target inside the audit root",
+            "qualified by its\n  stable source ID",
+            "must not copy\nthose runtime paths into the audit brief",
+        ):
+            self.assertIn(phrase, evidence)
+        self.assertIn("portable package locator", onboarding)
+        self.assertIn("absolute local root only in\nruntime memory", onboarding)
+        self.assertIn("Original locator", documentation)
+        self.assertIn("Cached text locator", documentation)
+        self.assertIn("portable package locator", templates)
+
+    def test_upload_is_a_verify_only_publication_workflow(self) -> None:
+        command = (ROOT / "commands/upload.md").read_text(encoding="utf-8")
+        workflow = (SKILL / "references/common/upload.md").read_text(encoding="utf-8")
+        config = (SKILL / "config/upload.yaml").read_text(encoding="utf-8")
+
+        self.assertIn('args: "[YYYYMMDD]"', command)
+        self.assertIn("`/wgo-upload [YYYYMMDD]`", command)
+        self.assertIn("The date is optional; when omitted", command)
+        self.assertIn("public-only", workflow)
+        self.assertIn("portable artifact-path", workflow)
+        self.assertIn("Do not call or recreate", workflow)
+        self.assertIn("agent's native cross-platform filesystem operations", workflow)
+        self.assertIn("Ask for explicit approval", workflow)
+        self.assertIn("without asking the auditor, repair only", workflow)
+        self.assertIn("remove trailing ASCII spaces or tabs from each line", workflow)
+        self.assertIn("ends with exactly one\n  newline", workflow)
+        self.assertIn("do not modify JSON or\nother file types", workflow)
+        self.assertIn("Do not modify the source audit root beyond the", workflow)
+        self.assertIn("never modify its manifest", workflow)
+        self.assertIn("When the date is omitted, resolve exactly the newest dated", workflow)
+        self.assertIn("files named exactly `.DS_Store`", workflow)
+        self.assertIn("That filename is the sole\npackaging exclusion", workflow)
+        self.assertIn("every other\nsource file exists at the same relative path", workflow)
+        for clone_option in (
+            "--depth 1",
+            "--filter=blob:none",
+            "--no-checkout",
+            "--single-branch",
+            "--branch",
+        ):
+            self.assertIn(clone_option, workflow)
+        self.assertIn("promisor\nremote", workflow)
+        self.assertIn("stop instead of falling back to a full clone", workflow)
+        self.assertIn("Configure sparse checkout for only the exact new destination", workflow)
+        self.assertIn("sparse-aware checkout of the fetched default-branch tip", workflow)
+        self.assertIn("bounded index and worktree diff checks", workflow)
+        self.assertIn("do not scan repository-wide\nuntracked or ignored files", workflow)
+        self.assertIn("Do not run `git pull`", workflow)
+        self.assertIn("Force-add that exact destination", workflow)
+        self.assertIn("never force-add a broader path", workflow)
+        self.assertIn("draft pull request", workflow)
+        self.assertIn("report_repository: wgo-audit/reports", config)
 
     def test_source_bounded_diagrams_are_explicit(self) -> None:
         template = (SKILL / "references/templates/detailed-artifact-templates.md").read_text(encoding="utf-8")
@@ -1245,11 +1310,11 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Present each reviewer's version", onboarding)
         self.assertIn("selected reviewer package IDs and versions", normalized_onboarding)
         self.assertIn(
-            "reviewer's ID/version/source/absolute package path",
+            "reviewer's ID/version/source/portable package locator",
             normalized_onboarding,
         )
         self.assertIn(
-            "Selected reviewer packages (ID, version, core/external, absolute path)",
+            "Selected reviewer packages (ID, version, core/external, portable package locator)",
             controls,
         )
         self.assertIn("selected reviewer IDs and versions", normalized_expectations)

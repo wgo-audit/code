@@ -40,6 +40,11 @@ if not exist "%SCRIPT_DIR%skills\%PLUGIN_NAME%\SKILL.md" (
   exit /b 1
 )
 
+if not exist "%SCRIPT_DIR%skills\%PLUGIN_NAME%\config\upload.yaml" (
+  echo Missing source path: %SCRIPT_DIR%skills\%PLUGIN_NAME%\config\upload.yaml
+  exit /b 1
+)
+
 echo Installing Whats.Going.On. into: %TARGET_DIR%
 call :install_codegraph
 call :install_pdftotext
@@ -65,7 +70,7 @@ for %%F in ("%SCRIPT_DIR%commands\*.md") do (
 del /s /q "%CODEX_DEST%\.DS_Store" >nul 2>nul
 
 echo Installing Claude plugin files...
-for %%C in (onboard audit status summarize operationalize) do del /q "%LEGACY_CLAUDE_COMMANDS_DEST%\wgo_%%C.md" >nul 2>nul
+for %%C in (onboard audit status summarize cost operationalize upload) do del /q "%LEGACY_CLAUDE_COMMANDS_DEST%\wgo_%%C.md" >nul 2>nul
 if exist "%LEGACY_CLAUDE_SKILL_DEST%" rmdir /s /q "%LEGACY_CLAUDE_SKILL_DEST%"
 if exist "%CLAUDE_PLUGIN_DEST%" rmdir /s /q "%CLAUDE_PLUGIN_DEST%"
 mkdir "%CLAUDE_PLUGIN_DEST%" >nul 2>nul
@@ -77,6 +82,8 @@ xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\references" "%CLAUDE_PLUGIN_DEST%\refere
 if errorlevel 1 exit /b 1
 xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\scripts" "%CLAUDE_PLUGIN_DEST%\scripts\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
+xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\config" "%CLAUDE_PLUGIN_DEST%\config\" /E /I /Y >nul
+if errorlevel 1 exit /b 1
 call :filter_frontmatter claude "%SCRIPT_DIR%skills\%PLUGIN_NAME%\SKILL.md" "%CLAUDE_PLUGIN_DEST%\SKILL.md"
 if errorlevel 1 exit /b 1
 for %%F in ("%SCRIPT_DIR%commands\*.md") do (
@@ -87,7 +94,7 @@ del /s /q "%CLAUDE_PLUGIN_DEST%\.DS_Store" >nul 2>nul
 
 echo Installing OpenCode command files...
 mkdir "%OPENCODE_COMMANDS_DEST%" >nul 2>nul
-for %%C in (onboard audit status summarize operationalize) do (
+for %%C in (onboard audit status summarize cost operationalize upload) do (
   del /q "%OPENCODE_COMMANDS_DEST%\wgo-%%C.md" >nul 2>nul
   call :filter_frontmatter opencode-command "%SCRIPT_DIR%commands\%%C.md" "%OPENCODE_COMMANDS_DEST%\wgo-%%C.md"
   if errorlevel 1 exit /b 1
@@ -97,6 +104,8 @@ mkdir "%OPENCODE_SKILL_DEST%" >nul 2>nul
 xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\references" "%OPENCODE_SKILL_DEST%\references\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
 xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\scripts" "%OPENCODE_SKILL_DEST%\scripts\" /E /I /Y >nul
+if errorlevel 1 exit /b 1
+xcopy "%SCRIPT_DIR%skills\%PLUGIN_NAME%\config" "%OPENCODE_SKILL_DEST%\config\" /E /I /Y >nul
 if errorlevel 1 exit /b 1
 call :filter_frontmatter opencode-skill "%SCRIPT_DIR%skills\%PLUGIN_NAME%\SKILL.md" "%OPENCODE_SKILL_DEST%\SKILL.md"
 if errorlevel 1 exit /b 1

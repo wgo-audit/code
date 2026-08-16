@@ -77,7 +77,7 @@ approved by the auditor before use.
 An approved external `supersedes` reviewer replaces its named core reviewer:
 
 - do not run both;
-- record the substitution and absolute package path in the audit brief;
+- record the substitution and portable package locator in the audit brief;
 - resolve dependencies on the core ID to the replacement; and
 - when multiple extensions supersede the same core reviewer, ask the auditor
   which one to use.

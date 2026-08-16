@@ -204,8 +204,8 @@ TABLE_SCHEMAS = {
     ),
     "documentation/catalog.md": (
         "ID",
-        "Original path",
-        "Cached text path",
+        "Original locator",
+        "Cached text locator",
         "Format",
         "Type and topics",
         "Relevant reviewers",
@@ -218,6 +218,34 @@ SECRET_PATTERNS = (
     re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
     re.compile(r"\bgh[pousr]_[A-Za-z0-9]{30,}\b"),
     re.compile(r"\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b"),
+)
+TEXT_ARTIFACT_SUFFIXES = {
+    ".csv",
+    ".html",
+    ".json",
+    ".md",
+    ".tsv",
+    ".txt",
+    ".yaml",
+    ".yml",
+}
+NONPORTABLE_PATH_PATTERNS = (
+    (
+        "POSIX absolute local path",
+        re.compile(
+            r"(?<![A-Za-z0-9:])/(?:Users|home|root|private/var/folders|tmp|var/folders)/[^\s`|<]+"
+        ),
+    ),
+    (
+        "Windows drive-qualified path",
+        re.compile(r"(?<![A-Za-z0-9])[A-Za-z]:[\\/][^\s`|<]+"),
+    ),
+    ("UNC path", re.compile(r"(?<![\\])\\\\[^\s\\/]+[\\/][^\s`|<]+")),
+    ("home-relative path", re.compile(r"(?<![A-Za-z0-9])~[\\/][^\s`|<]+")),
+    ("file URL", re.compile(r"\bfile://[^\s`|<]+", re.I)),
+)
+PARENT_TRAVERSAL_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9.])\.\.[\\/][^\s`|<]+"
 )
 
 
@@ -714,6 +742,36 @@ def check_secrets(root: Path, result: Result) -> None:
             result.error(f"Credential-like material found: {path.relative_to(root)}")
 
 
+def check_portable_paths(root: Path, result: Result) -> None:
+    resolved_root = root.resolve()
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        if path.suffix.lower() not in TEXT_ARTIFACT_SUFFIXES:
+            continue
+        relative = path.relative_to(root)
+        for line_number, line in enumerate(read_text(path, result).splitlines(), 1):
+            path_line = line
+            if path.suffix.lower() == ".json":
+                path_line = re.sub(
+                    r'("wgo_role_task_name"\s*:\s*")[^"]*(")',
+                    r"\1\2",
+                    path_line,
+                )
+            for label, pattern in NONPORTABLE_PATH_PATTERNS:
+                if pattern.search(path_line):
+                    result.error(
+                        f"{relative}:{line_number} contains non-portable path: {label}"
+                    )
+            for match in PARENT_TRAVERSAL_PATTERN.finditer(path_line):
+                locator = match.group(0).replace("\\", "/")
+                resolved = (path.parent / locator).resolve()
+                if not resolved.is_relative_to(resolved_root):
+                    result.error(
+                        f"{relative}:{line_number} contains non-portable path: "
+                        "parent traversal outside audit root"
+                    )
+                    break
+
+
 def check_decision_family(
     root: Path,
     family: str,
@@ -807,6 +865,7 @@ def validate(
     check_reviewer_reports(root, result)
     check_cutoffs(root, result)
     check_open_items(root, result)
+    check_portable_paths(root, result)
     check_secrets(root, result)
     check_decision_family(root, "architecture", "ADR", "architecture", result)
     check_decision_family(root, "product", "PDR", "product-value", result)

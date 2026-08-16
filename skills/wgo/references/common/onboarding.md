@@ -108,7 +108,7 @@ Ask in this order:
    clone. Do not ask this question for a confirmed monorepo.
 4. Ask for every additional evidence or documentation source in one answer:
    local folders and GitHub repositories containing supporting records. Ask for
-   one path or URL per line (relative to the audit folder or absolute). Tell the
+   one path or URL per line (relative to the current project or absolute). Tell the
    auditor: local copies enable fast, repeatable cross-document search and exact
    evidence citations while keeping content inside the agreed audit boundary.
    A dated cloud export is useful, but the auditor chooses what to provide.
@@ -217,7 +217,7 @@ active root, baseline and access boundary, active audit platform/model, catalog
 platform/model, reviewer-version comparison and acceptance, context, mandate,
 cutoff, full-folder detailed standard, primary/supporting code repositories,
 evidence and documentation sources, automatic GitHub repository sources, each
-selected reviewer's ID/version/source/absolute package path, substitutions,
+selected reviewer's ID/version/source/portable package locator, substitutions,
 resolved dependency waves, reviewer run disposition, material auditor answers,
 and major unknowns. In every created or updated brief, record each approved
 question, concern, mandate, decision, and harmful failure mode in the Business
@@ -233,9 +233,10 @@ For each primary or supporting GitHub code repository that is not already a
 local current-folder Git root or temporary intake clone, clone the requested
 accessible ref into a system temporary workspace such as
 `<temp>/wgo-code-repositories/<audit-id>/<repository-name>/`. Record every
-repository's URL, ref, resolved commit, local path, and clone failure as a
-source-access fact. Use the local root or clone as a code root; it is not an
-audit artifact. Inspect each accessible GitHub repository's PRs, issues,
+repository's stable source ID, URL, ref, resolved commit, portable locator, and
+clone failure as a source-access fact. Keep its absolute local root only in
+runtime memory. Use the local root or clone as a code root; it is not an audit
+artifact. Inspect each accessible GitHub repository's PRs, issues,
 Projects, Actions, releases, and history as a read-only source. Use public data
 and private data available through the existing GitHub session; record material
 access results or limits without asking for a second approval.
@@ -251,7 +252,8 @@ worker.
 Then delegate exactly one documentation-preparation worker before asking to
 start the audit. Give it `documentation-prep.md`, the discovered
 documentation-bearing paths, approved local source paths and prepared clones,
-repository URL/ref/resolved-commit/local-root mappings, converter availability,
+repository URL/ref/resolved-commit/source-ID mappings plus transient local
+roots, converter availability,
 catalog output path, audit mandate, selected reviewer IDs, cheap
 source-discovery capability signals, active audit platform, and selected
 catalog model. Select only from that active platform: Codex/OpenAI uses

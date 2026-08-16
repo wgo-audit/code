@@ -37,8 +37,10 @@ class InstallerTests(unittest.TestCase):
         installer = (ROOT / "install.sh").read_text(encoding="utf-8")
         self.assertIn("`/wgo:onboard`", readme)
         self.assertIn("`/wgo:operationalize`", readme)
+        self.assertIn("`/wgo:upload [YYYYMMDD]`", readme)
         self.assertIn("`/wgo-onboard`", readme)
         self.assertIn("`/wgo-operationalize`", readme)
+        self.assertIn("`/wgo-upload [YYYYMMDD]`", readme)
         self.assertIn("In Claude, run /wgo:onboard", installer)
         self.assertIn("In OpenCode, run /wgo-onboard", installer)
         for command in (
@@ -99,6 +101,8 @@ class InstallerTests(unittest.TestCase):
 
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertTrue((target / "plugins/wgo/skills/wgo/SKILL.md").is_file())
+            self.assertTrue((target / "plugins/wgo/commands/upload.md").is_file())
+            self.assertTrue((target / "plugins/wgo/skills/wgo/config/upload.yaml").is_file())
             codex_skill = (target / "plugins/wgo/skills/wgo/SKILL.md").read_text(
                 encoding="utf-8"
             )
@@ -145,6 +149,8 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((claude_plugin / ".claude-plugin/plugin.json").is_file())
             self.assertTrue((claude_plugin / "SKILL.md").is_file())
             self.assertTrue((claude_plugin / "commands/onboard.md").is_file())
+            self.assertTrue((claude_plugin / "commands/upload.md").is_file())
+            self.assertTrue((claude_plugin / "config/upload.yaml").is_file())
             self.assertTrue(
                 (claude_plugin / "references/common/reviewer-contract.md").is_file()
             )
@@ -173,6 +179,7 @@ class InstallerTests(unittest.TestCase):
             self.assertIn("OpenCode command arguments: `$ARGUMENTS`.", opencode_onboard)
             self.assertIn("read `.opencode/skills/wgo/SKILL.md` directly", opencode_onboard)
             self.assertIn("Load and use the WGO skill.", opencode_onboard)
+            self.assertTrue((target / ".opencode/commands/wgo-upload.md").is_file())
             opencode_skill_path = target / ".opencode/skills/wgo/SKILL.md"
             self.assertTrue(opencode_skill_path.is_file())
             opencode_skill = opencode_skill_path.read_text(encoding="utf-8")
@@ -183,6 +190,7 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue(
                 (target / ".opencode/skills/wgo/references/common/reviewer-contract.md").is_file()
             )
+            self.assertTrue((target / ".opencode/skills/wgo/config/upload.yaml").is_file())
             self.assertTrue(
                 (
                     target
@@ -244,6 +252,8 @@ class InstallerTests(unittest.TestCase):
         self.assertIn("/wgo:onboard", content)
         self.assertIn(".opencode\\commands", content)
         self.assertIn("/wgo-onboard", content)
+        self.assertIn("(onboard audit status summarize cost operationalize upload)", content)
+        self.assertIn("%CLAUDE_PLUGIN_DEST%\\config", content)
         self.assertIn("opencode", (ROOT / "scripts/filter-frontmatter.ps1").read_text(encoding="utf-8"))
         self.assertNotIn("astral.sh/uv", content)
 

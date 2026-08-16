@@ -1,7 +1,7 @@
 ---
 name: wgo
-description: Evidence-led startup and SMB transition-control audit workflow for products, repositories, teams, vendors, continuity, value, cost, security, delivery, and architecture. Use when the active agent should onboard or resume a Whats.Going.On. audit, run one approved audit reviewer, report audit status, synthesize decision-grade reports, or turn an approved synthesis into clearly untested operator aids.
-when_to_use: Use when Claude should onboard or resume a Whats.Going.On. audit, run one approved audit reviewer, report audit status, synthesize decision-grade reports, or turn an approved synthesis into clearly untested operator aids.
+description: Evidence-led startup and SMB transition-control audit workflow for products, repositories, teams, vendors, continuity, value, cost, security, delivery, and architecture. Use when the active agent should onboard or resume a Whats.Going.On. audit, run one approved audit reviewer, report status, synthesize reports, draft approved operator aids, or publish a completed public audit through a draft PR.
+when_to_use: Use when Claude should onboard or resume a Whats.Going.On. audit, run one approved audit reviewer, report status, synthesize reports, draft approved operator aids, or publish a completed public audit through a draft PR.
 user-invocable: false
 ---
 
@@ -37,6 +37,10 @@ source-backed artifacts; do not make the auditor administer a process model.
   Before drafting, name that packet and ask whether to add an optional aid.
   It never executes a procedure or authorizes a system change. After the
   packet is complete, it refreshes the cost estimate through operationalization.
+- `wgo:upload [YYYYMMDD]` (Codex), `/wgo:upload [YYYYMMDD]` (Claude), or
+  `/wgo-upload [YYYYMMDD]` (OpenCode): verify one completed public audit and
+  open a draft report-repository PR. It automatically repairs narrow Markdown
+  whitespace defects; the optional date defaults to the newest dated audit root.
 
 ## Rules
 
@@ -48,6 +52,9 @@ source-backed artifacts; do not make the auditor administer a process model.
 - Keep implementation, live state, behavior, approval, ownership, cost, and
   future intent distinct. One does not prove another.
 - Do not copy secrets or unnecessary PII. Use redacted locators.
+- Persist only portable relative filesystem paths: audit-root-relative,
+  safely artifact-relative, or stable-source-ID-qualified.
+  Absolute paths are transient tool inputs only.
 - A failed expected-source access attempt needs a remediation, approved
   fallback, or explicit exclusion.
 - Do not install dependencies, restore packages, change lockfiles, deploy,
@@ -130,6 +137,8 @@ reading an output template that has not been selected.
 - Operationalize: `references/common/operationalization.md`,
   `references/common/evidence-rules.md`, the selected template(s), and then
   the same provider cost workflow to refresh the cost estimate.
+- Upload: `references/common/upload.md`, `references/common/evidence-rules.md`,
+  and `config/upload.yaml`.
 
 ## New-Audit Layout
 

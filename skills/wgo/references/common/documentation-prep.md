@@ -51,8 +51,9 @@ classify documents in bounded batches, then remove duplicate paths, assign
 stable `DOC-NNN` IDs, and finish every catalog row. Freeze the factual
 classification, reviewer routing, summary, and limits before the second pass.
 
-For a source that is already searchable text, use its original path as the
-cached-text path; do not create a duplicate. For PDF, DOCX, XLSX, and PPTX,
+For a source that is already searchable text, use its qualified portable
+locator as the cached-text locator; do not create a duplicate. For PDF, DOCX,
+XLSX, and PPTX,
 cache converted text only when a reader or approved converter makes it useful.
 Record `not-created` and a concise limitation when conversion is unavailable or
 unreliable.
@@ -70,9 +71,13 @@ catalog is navigation metadata, not audit evidence. Cite the original document
 and section for every finding.” Then create one row per document:
 
 ```markdown
-| ID | Original path | Cached text path | Format | Type and topics | Relevant reviewers | Summary (target 75–100 words; max 120) | Limits |
+| ID | Original locator | Cached text locator | Format | Type and topics | Relevant reviewers | Summary (target 75–100 words; max 120) | Limits |
 |---|---|---|---|---|---|---|---|
 ```
+
+Both locator columns follow the portable artifact-path rule: use the stable
+source ID plus a path relative to that source root. Runtime clone, attachment,
+conversion-cache, and home-directory paths are never written to the catalog.
 
 Use only factual, source-visible metadata. `Type and topics` is a short routing
 label such as product, technical, operational, security, commercial, delivery,
@@ -95,8 +100,8 @@ decision, control, ownership claim, operational procedure, product promise, or
 reviewer conclusion.
 
 Resolve each candidate against the complete corpus identity index before
-reporting it. The index includes original and cached paths, repository URL/ref/
-resolved commit/local-root mappings, repository-relative paths, normalized
+reporting it. The index includes original and cached portable locators,
+repository URL/ref/resolved commit/source-ID mappings, repository-relative paths, normalized
 GitHub blob/tree/raw URL forms, document IDs, titles, and distinctive headings.
 Resolve relative links from the referring file. Strip harmless URL fragments
 and query parameters when matching. For GitHub URLs, map the repository and
