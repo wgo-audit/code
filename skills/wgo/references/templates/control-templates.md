@@ -32,85 +32,15 @@ generated reports at synthesis when requested.
 | Success criteria | |
 ```
 
-## Audit Manifest
+## Business Concerns
 
-Create `manifest.json` as canonical JSON. It is the machine-readable identity,
-provenance, evidence-boundary, result-summary, and relationship contract for
-`wgo-audit/reports` and future website publishing. Do not copy report prose into
-it. Omit unsupported optional fields; use `null`, `[]`, or controlled `unknown`
-only when the schema requires a value and evidence is unavailable.
-
-```json
-{
-  "schemaVersion": "1.0.0",
-  "report": {
-    "id": "<subject-id>-<evidence-cutoff>-<audit-type>",
-    "title": "<report title>",
-    "generatedAt": null,
-    "language": "en",
-    "entrypoint": "index.md"
-  },
-  "subject": {
-    "id": "<subject-id>",
-    "name": "<subject name>",
-    "kind": "software-project",
-    "description": null,
-    "canonicalUrl": null
-  },
-  "audit": {
-    "type": "<audit type>",
-    "mode": "unknown",
-    "depth": "deep"
-  },
-  "evidence": {
-    "cutoff": "<YYYY-MM-DD>",
-    "sources": [],
-    "accessBoundary": {
-      "level": "unknown"
-    },
-    "limitations": []
-  },
-  "execution": {
-    "generator": {
-      "name": "wgo-audit",
-      "repository": "wgo-audit/code",
-      "version": null,
-      "commit": null
-    },
-    "platform": {
-      "runtime": null,
-      "runtimeVersion": null,
-      "models": []
-    },
-    "reviewers": [],
-    "acceptedVariances": []
-  },
-  "results": {
-    "headline": null,
-    "conclusions": []
-  },
-  "relationships": {
-    "baseline": null,
-    "previousAudit": null,
-    "comparesTo": [],
-    "supersedes": null
-  }
-}
+```markdown
+| ID | Type | Approved statement |
+|---|---|---|
+| <stable-slug> | <question, concern, mandate, decision, or failure-mode> | <approved wording> |
 ```
 
-Use only these top-level fields: `schemaVersion`, `report`, `subject`, `audit`,
-`evidence`, `execution`, `results`, and `relationships`. Do not carry legacy
-fields such as `asset`, `assetUrl`, `product`, `auditType`, `evidenceCutoff`,
-`label`, `highlights`, top-level `generator`, top-level `reviewers`, top-level
-`sources`, or a question-keyed `conclusions` object.
-
-`subject.id` is the eventual `audits/<subject>/` directory name in the reports
-repository. `evidence.cutoff` is the eventual `audits/<subject>/<cutoff>/`
-directory name. Every Git source commit must be a full 40-character SHA when
-known. Each reviewer entry must include `id`, `version`, and `status`; use
-`null` for unknown migrated versions rather than inventing them. Stable
-conclusion IDs belong in `results.conclusions`; detailed findings and evidence
-remain in the report.
+Preserve an existing ID when a later audit reassesses the same concern.
 
 ## Audit Checklist
 

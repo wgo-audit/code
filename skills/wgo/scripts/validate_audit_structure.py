@@ -8,18 +8,19 @@ import json
 import re
 import sys
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 
 BASE_REQUIRED = (
     "audit-brief.md",
     "audit-checklist.md",
-    "manifest.json",
     "evidence/evidence-ledger.md",
     "evidence/source-access-register.md",
     "controls/open-items.md",
 )
 FINAL_REQUIRED = (
+    "manifest.json",
     "index.md",
     "executive-summary.md",
     "product-manager-notes.md",
@@ -116,15 +117,28 @@ OPEN_ITEM_STATUSES = {
 OPEN_ITEM_TYPES = {"risk", "decision-needed", "verification", "action"}
 OPEN_ITEM_PRIORITIES = {"P1", "P2", "P3"}
 MANIFEST_TOP_LEVEL = {
+    "$schema",
     "schemaVersion",
     "report",
     "subject",
     "audit",
+    "businessConcerns",
     "evidence",
     "execution",
-    "results",
     "relationships",
 }
+MANIFEST_SCHEMA_URL = "https://wgo-audit.com/schemas/manifest/1.0.0.json"
+MANIFEST_SCHEMA_VERSION = "1.0.0"
+MANIFEST_CONCERN_TYPES = {
+    "question",
+    "concern",
+    "mandate",
+    "decision",
+    "failure-mode",
+}
+MANIFEST_OUTCOMES = {"yes", "partial", "no", "unknown", "not-applicable"}
+MANIFEST_AUDIT_MODES = {"baseline", "improve", "compare", "blind-compare", "unknown"}
+MANIFEST_AUDIT_DEPTHS = {"light", "standard", "deep", "custom"}
 MANIFEST_REVIEWER_STATUSES = {
     "completed",
     "partial",
@@ -133,7 +147,8 @@ MANIFEST_REVIEWER_STATUSES = {
     "not-applicable",
 }
 MANIFEST_CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
-MANIFEST_SEVERITY_VALUES = {"critical", "high", "medium", "low"}
+MANIFEST_COST_COVERAGE = {"audit", "audit-and-operationalization"}
+MANIFEST_COST_STATUSES = {"final", "unreconciled"}
 FULL_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$", re.I)
 CHECKLIST_STATES = {
     "confirmed",
@@ -320,6 +335,20 @@ def contains_placeholder(value: object) -> bool:
     return False
 
 
+def is_nonnegative_cent_amount(value: object) -> bool:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    amount = Decimal(str(value))
+    try:
+        return (
+            amount.is_finite()
+            and amount >= 0
+            and amount == amount.quantize(Decimal("0.01"))
+        )
+    except InvalidOperation:
+        return False
+
+
 def check_manifest(root: Path, result: Result) -> None:
     path = root / "manifest.json"
     if not path.is_file():
@@ -337,16 +366,104 @@ def check_manifest(root: Path, result: Result) -> None:
             result.error(f"manifest.json missing required top-level key: {key}")
     if contains_placeholder(data):
         result.error("manifest.json contains unresolved TODO/TBD placeholder text")
+    if data.get("$schema") != MANIFEST_SCHEMA_URL:
+        result.error(f"manifest.json $schema must be {MANIFEST_SCHEMA_URL}")
+    if data.get("schemaVersion") != MANIFEST_SCHEMA_VERSION:
+        result.error(
+            f"manifest.json schemaVersion must be {MANIFEST_SCHEMA_VERSION}"
+        )
 
     report = data.get("report") if isinstance(data.get("report"), dict) else {}
+    for field in ("id", "title", "entrypoint"):
+        if not isinstance(report.get(field), str) or not report[field].strip():
+            result.error(f"manifest.json report.{field} must be a non-empty string")
     entrypoint = report.get("entrypoint") if isinstance(report, dict) else None
     if entrypoint and not (root / str(entrypoint)).is_file():
-        # Before synthesis, entrypoint may be planned but not created yet. Warn only
-        # when final reports are present enough that the entrypoint should exist.
-        if any((root / final).is_file() for final in FINAL_REQUIRED):
-            result.error(f"manifest.json report.entrypoint does not exist: {entrypoint}")
+        result.error(f"manifest.json report.entrypoint does not exist: {entrypoint}")
+
+    subject = data.get("subject") if isinstance(data.get("subject"), dict) else {}
+    for field in ("id", "name", "kind"):
+        if not isinstance(subject.get(field), str) or not subject[field].strip():
+            result.error(f"manifest.json subject.{field} must be a non-empty string")
+
+    audit = data.get("audit") if isinstance(data.get("audit"), dict) else {}
+    if not isinstance(audit.get("type"), str) or not audit["type"].strip():
+        result.error("manifest.json audit.type must be a non-empty string")
+    if audit.get("mode") not in MANIFEST_AUDIT_MODES:
+        result.error(f"manifest.json audit.mode is invalid: {audit.get('mode')}")
+    if audit.get("depth") not in MANIFEST_AUDIT_DEPTHS:
+        result.error(f"manifest.json audit.depth is invalid: {audit.get('depth')}")
+
+    concerns = data.get("businessConcerns")
+    if not isinstance(concerns, list):
+        result.error("manifest.json businessConcerns must be an array")
+        concerns = []
+    elif not concerns:
+        result.error("manifest.json businessConcerns must include at least one concern")
+    concern_ids: set[str] = set()
+    for index, concern in enumerate(concerns):
+        if not isinstance(concern, dict):
+            result.error(f"manifest.json businessConcerns[{index}] must be an object")
+            continue
+        concern_id = concern.get("id")
+        if not isinstance(concern_id, str) or not concern_id.strip():
+            result.error(
+                f"manifest.json businessConcerns[{index}].id must be a non-empty string"
+            )
+        elif concern_id in concern_ids:
+            result.error(f"manifest.json duplicate business concern id: {concern_id}")
+        else:
+            concern_ids.add(concern_id)
+        concern_type = concern.get("type")
+        if concern_type not in MANIFEST_CONCERN_TYPES:
+            result.error(
+                f"manifest.json businessConcerns[{index}].type is invalid: {concern_type}"
+            )
+        if not isinstance(concern.get("statement"), str) or not concern["statement"].strip():
+            result.error(
+                f"manifest.json businessConcerns[{index}].statement must be a non-empty string"
+            )
+        conclusion = concern.get("conclusion")
+        if not isinstance(conclusion, dict):
+            result.error(
+                f"manifest.json businessConcerns[{index}].conclusion must be an object"
+            )
+            continue
+        outcome = conclusion.get("outcome")
+        if outcome not in MANIFEST_OUTCOMES:
+            result.error(
+                f"manifest.json businessConcerns[{index}].conclusion.outcome "
+                f"is invalid: {outcome}"
+            )
+        if not isinstance(conclusion.get("statement"), str) or not conclusion["statement"].strip():
+            result.error(
+                f"manifest.json businessConcerns[{index}].conclusion.statement "
+                "must be a non-empty string"
+            )
+        confidence = conclusion.get("confidence")
+        if confidence is not None and confidence not in MANIFEST_CONFIDENCE_VALUES:
+            result.error(
+                f"manifest.json businessConcerns[{index}].conclusion.confidence "
+                f"is invalid: {confidence}"
+            )
+        source = conclusion.get("source")
+        if source is not None:
+            source_path = str(source).split("#", 1)[0]
+            if not isinstance(source, str) or not source_path or Path(source_path).is_absolute():
+                result.error(
+                    f"manifest.json businessConcerns[{index}].conclusion.source "
+                    "must be a relative report path"
+                )
+            elif not (root / source_path).is_file():
+                result.error(
+                    f"manifest.json businessConcerns[{index}].conclusion.source "
+                    f"does not exist: {source}"
+                )
 
     evidence = data.get("evidence") if isinstance(data.get("evidence"), dict) else {}
+    cutoff = evidence.get("cutoff") if isinstance(evidence, dict) else None
+    if not isinstance(cutoff, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", cutoff):
+        result.error("manifest.json evidence.cutoff must be an ISO date (YYYY-MM-DD)")
     sources = evidence.get("sources", []) if isinstance(evidence, dict) else []
     if sources is not None and not isinstance(sources, list):
         result.error("manifest.json evidence.sources must be an array")
@@ -363,8 +480,13 @@ def check_manifest(root: Path, result: Result) -> None:
                 result.error(
                     f"manifest.json evidence.sources[{index}].commit must be a full Git SHA"
                 )
+    if not isinstance(evidence.get("accessBoundary"), dict):
+        result.error("manifest.json evidence.accessBoundary must be an object")
 
     execution = data.get("execution") if isinstance(data.get("execution"), dict) else {}
+    generator = execution.get("generator") if isinstance(execution, dict) else None
+    if not isinstance(generator, dict) or not isinstance(generator.get("name"), str) or not generator["name"].strip():
+        result.error("manifest.json execution.generator.name must be a non-empty string")
     reviewers = execution.get("reviewers", []) if isinstance(execution, dict) else []
     if reviewers is not None and not isinstance(reviewers, list):
         result.error("manifest.json execution.reviewers must be an array")
@@ -384,31 +506,75 @@ def check_manifest(root: Path, result: Result) -> None:
                 f"manifest.json execution.reviewers[{index}].status is invalid: {status}"
             )
 
-    results = data.get("results") if isinstance(data.get("results"), dict) else {}
-    conclusions = results.get("conclusions", []) if isinstance(results, dict) else []
-    if conclusions is not None and not isinstance(conclusions, list):
-        result.error("manifest.json results.conclusions must be an array")
-        conclusions = []
-    conclusion_ids: set[str] = set()
-    for index, conclusion in enumerate(conclusions):
-        if not isinstance(conclusion, dict):
-            result.error(f"manifest.json results.conclusions[{index}] must be an object")
-            continue
-        conclusion_id = conclusion.get("id")
-        if conclusion_id in conclusion_ids:
-            result.error(f"manifest.json duplicate conclusion id: {conclusion_id}")
-        if isinstance(conclusion_id, str):
-            conclusion_ids.add(conclusion_id)
-        confidence = conclusion.get("confidence")
-        if confidence is not None and confidence not in MANIFEST_CONFIDENCE_VALUES:
-            result.error(
-                f"manifest.json results.conclusions[{index}].confidence is invalid: {confidence}"
-            )
-        severity = conclusion.get("severity")
-        if severity is not None and severity not in MANIFEST_SEVERITY_VALUES:
-            result.error(
-                f"manifest.json results.conclusions[{index}].severity is invalid: {severity}"
-            )
+    cost_estimate = execution.get("costEstimate")
+    if cost_estimate is not None:
+        if not isinstance(cost_estimate, dict):
+            result.error("manifest.json execution.costEstimate must be an object or null")
+        else:
+            if cost_estimate.get("basis") != "api-equivalent":
+                result.error(
+                    "manifest.json execution.costEstimate.basis must be api-equivalent"
+                )
+            coverage = cost_estimate.get("coverage")
+            if coverage not in MANIFEST_COST_COVERAGE:
+                result.error(
+                    "manifest.json execution.costEstimate.coverage is invalid: "
+                    f"{coverage}"
+                )
+            cost_status = cost_estimate.get("status")
+            if cost_status not in MANIFEST_COST_STATUSES:
+                result.error(
+                    "manifest.json execution.costEstimate.status is invalid: "
+                    f"{cost_status}"
+                )
+            if cost_estimate.get("currency") != "USD":
+                result.error(
+                    "manifest.json execution.costEstimate.currency must be USD"
+                )
+
+            total = cost_estimate.get("totalUsd")
+            if "totalUsd" not in cost_estimate:
+                result.error(
+                    "manifest.json execution.costEstimate missing field: totalUsd"
+                )
+            if cost_status == "final" and not is_nonnegative_cent_amount(total):
+                result.error(
+                    "manifest.json execution.costEstimate.totalUsd must be a "
+                    "non-negative dollars-and-cents number for final status"
+                )
+            if cost_status == "unreconciled" and total is not None:
+                result.error(
+                    "manifest.json execution.costEstimate.totalUsd must be null "
+                    "for unreconciled status"
+                )
+
+            if "reconciledSubtotalUsd" in cost_estimate:
+                subtotal = cost_estimate.get("reconciledSubtotalUsd")
+                if not is_nonnegative_cent_amount(subtotal):
+                    result.error(
+                        "manifest.json execution.costEstimate.reconciledSubtotalUsd "
+                        "must be a non-negative dollars-and-cents number"
+                    )
+                if cost_status == "final":
+                    result.error(
+                        "manifest.json execution.costEstimate.reconciledSubtotalUsd "
+                        "must be omitted for final status"
+                    )
+
+            source = cost_estimate.get("source")
+            source_path = source.split("#", 1)[0] if isinstance(source, str) else ""
+            if not source_path or Path(source_path).is_absolute():
+                result.error(
+                    "manifest.json execution.costEstimate.source must be a "
+                    "relative report path"
+                )
+            elif not (root / source_path).is_file():
+                result.error(
+                    "manifest.json execution.costEstimate.source does not exist: "
+                    f"{source}"
+                )
+    if not isinstance(data.get("relationships"), dict):
+        result.error("manifest.json relationships must be an object")
 
 
 def check_id_formats(root: Path, result: Result) -> None:

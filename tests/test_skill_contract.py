@@ -146,13 +146,14 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("only work/status view", command)
         self.assertIn("Do not create claims, collection logs, per-type control registers, status", onboarding)
         self.assertIn("additional manifests", onboarding)
-        self.assertIn("canonical\n`manifest.json` is part of the lean start", onboarding)
+        self.assertIn("Synthesis creates the\nsingle report manifest", onboarding)
 
     def test_onboarding_collects_evidence_sources_and_code_repositories(self) -> None:
         onboarding = (SKILL / "references/common/onboarding.md").read_text(encoding="utf-8")
         normalized_onboarding = " ".join(onboarding.split())
         command = (ROOT / "commands/onboard.md").read_text(encoding="utf-8")
         templates = (SKILL / "references/templates/control-templates.md").read_text(encoding="utf-8")
+        manifest_template = (SKILL / "references/templates/manifest-template.json").read_text(encoding="utf-8")
 
         for phrase in (
             "every additional evidence or documentation source",
@@ -179,13 +180,13 @@ class SkillContractTests(unittest.TestCase):
         )
         self.assertIn("Evidence and documentation sources", templates)
         self.assertIn("Supporting code repositories", templates)
-        self.assertIn("## Audit Manifest", templates)
-        self.assertIn('"schemaVersion": "1.0.0"', templates)
-        self.assertIn('"subject"', templates)
-        self.assertIn('"relationships"', templates)
-        self.assertIn("Do not carry legacy\nfields", templates)
-        self.assertIn("manifest.json", onboarding)
-        self.assertIn("machine-readable report contract", onboarding)
+        self.assertIn("## Business Concerns", templates)
+        self.assertIn("| ID | Type | Approved statement |", templates)
+        self.assertNotIn("## Audit Manifest", templates)
+        self.assertIn('"schemaVersion": "1.0.0"', manifest_template)
+        self.assertIn('"businessConcerns"', manifest_template)
+        self.assertIn('"relationships"', manifest_template)
+        self.assertNotIn("manifest.json\n", onboarding[onboarding.index("## Create The Lean Start"):onboarding.index("Use the selected templates")])
         self.assertLess(
             onboarding.index("other code repositories support the product"),
             onboarding.index("Ask for every additional evidence or documentation source"),
@@ -435,6 +436,8 @@ class SkillContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
         command = (ROOT / "commands/operationalize.md").read_text(encoding="utf-8")
+        cost_command = (ROOT / "commands/cost.md").read_text(encoding="utf-8")
+        summarize_command = (ROOT / "commands/summarize.md").read_text(encoding="utf-8")
 
         self.assertIn("WGO_PHASE_ONBOARDING_START", onboarding)
         self.assertIn("WGO_PHASE_AUDIT_START", audit)
@@ -458,6 +461,12 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("## Token Totals By Session And Model", cost_template)
         self.assertIn("Update\n  `controls/cost-estimate.md`", command)
         self.assertIn("preserve the frozen\naudit-only manifest", operationalization)
+        self.assertIn("execution.costEstimate", cost_template)
+        self.assertIn("reconciledSubtotalUsd", cost_template)
+        self.assertIn("execution.costEstimate", cost_command)
+        self.assertIn("execution.costEstimate", summarize_command)
+        self.assertIn("execution.costEstimate", command)
+        self.assertIn("Replace `manifest.json`'s `execution.costEstimate`", operationalization)
 
     def test_cost_fixture_bounds_full_history_and_suppresses_unchanged_echoes(self) -> None:
         fixture = SKILL / "references/fixtures/cost-estimation"
@@ -631,6 +640,7 @@ class SkillContractTests(unittest.TestCase):
         validator = (SKILL / "scripts/validate_audit_structure.py").read_text(encoding="utf-8")
         synthesis = (SKILL / "references/common/synthesis.md").read_text(encoding="utf-8")
         templates = (SKILL / "references/templates/control-templates.md").read_text(encoding="utf-8")
+        manifest_template = (SKILL / "references/templates/manifest-template.json").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         normalized_synthesis = " ".join(synthesis.split())
         normalized_templates = " ".join(templates.split())
@@ -638,13 +648,17 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn('"manifest.json"', validator)
         self.assertIn("MANIFEST_TOP_LEVEL", validator)
         self.assertIn("FULL_SHA_PATTERN", validator)
-        self.assertIn("duplicate conclusion id", validator)
+        self.assertIn("duplicate business concern id", validator)
         self.assertIn("execution.reviewers", validator)
-        self.assertIn("Update `manifest.json` after the four audience reports", synthesis)
-        self.assertIn("Do not invent generator commits, reviewer versions", normalized_synthesis)
-        self.assertIn("schemaVersion`, `report`, `subject`, `audit`", normalized_templates)
-        self.assertIn("subject.id` is the eventual `audits/<subject>/`", templates)
-        self.assertIn("Every Git source commit must be a full 40-character SHA", templates)
+        self.assertIn("After the four audience reports are final", synthesis)
+        self.assertIn("create the initial `manifest.json`", normalized_synthesis)
+        self.assertIn("executive summary answers every Business Concerns row", normalized_synthesis)
+        self.assertIn("state `unknown` when the evidence cannot answer it", normalized_synthesis)
+        self.assertIn("| ID | Type | Approved statement |", normalized_templates)
+        self.assertIn('"$schema": "https://wgo-audit.com/schemas/manifest/1.0.0.json"', manifest_template)
+        self.assertIn('"businessConcerns": []', manifest_template)
+        self.assertIn('"costEstimate": null', manifest_template)
+        self.assertIn("execution.costEstimate", synthesis)
         self.assertIn("Machine-readable identity, provenance, evidence boundary", readme)
 
     def test_source_bounded_diagrams_are_explicit(self) -> None:

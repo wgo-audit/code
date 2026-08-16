@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -24,54 +25,6 @@ class ValidateAuditStructureTests(unittest.TestCase):
         self.root = Path(self.temp.name) / "_whats-going-on-20260712"
         self.root.mkdir()
         self.write("audit-brief.md")
-        self.write(
-            "manifest.json",
-            '{\n'
-            '  "schemaVersion": "1.0.0",\n'
-            '  "report": {\n'
-            '    "id": "acme-2026-07-12-transition-control",\n'
-            '    "title": "Acme Transition Control Audit",\n'
-            '    "generatedAt": null,\n'
-            '    "language": "en",\n'
-            '    "entrypoint": "index.md"\n'
-            '  },\n'
-            '  "subject": {\n'
-            '    "id": "acme",\n'
-            '    "name": "Acme",\n'
-            '    "kind": "software-project"\n'
-            '  },\n'
-            '  "audit": {\n'
-            '    "type": "transition-control",\n'
-            '    "mode": "unknown",\n'
-            '    "depth": "deep"\n'
-            '  },\n'
-            '  "evidence": {\n'
-            '    "cutoff": "2026-07-12",\n'
-            '    "sources": [],\n'
-            '    "accessBoundary": { "level": "unknown" },\n'
-            '    "limitations": []\n'
-            '  },\n'
-            '  "execution": {\n'
-            '    "generator": {\n'
-            '      "name": "wgo-audit",\n'
-            '      "repository": "wgo-audit/code",\n'
-            '      "version": null,\n'
-            '      "commit": null\n'
-            '    },\n'
-            '    "reviewers": []\n'
-            '  },\n'
-            '  "results": {\n'
-            '    "headline": null,\n'
-            '    "conclusions": []\n'
-            '  },\n'
-            '  "relationships": {\n'
-            '    "baseline": null,\n'
-            '    "previousAudit": null,\n'
-            '    "comparesTo": [],\n'
-            '    "supersedes": null\n'
-            '  }\n'
-            '}\n',
-        )
         self.write(
             "audit-checklist.md",
             "# Audit Checklist\n\n"
@@ -107,6 +60,50 @@ class ValidateAuditStructureTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
 
+    def write_manifest(self) -> None:
+        self.write(
+            "manifest.json",
+            '{\n'
+            '  "$schema": "https://wgo-audit.com/schemas/manifest/1.0.0.json",\n'
+            '  "schemaVersion": "1.0.0",\n'
+            '  "report": {\n'
+            '    "id": "acme-2026-07-12-transition-control",\n'
+            '    "title": "Acme Transition Control Audit",\n'
+            '    "entrypoint": "index.md"\n'
+            '  },\n'
+            '  "subject": { "id": "acme", "name": "Acme", "kind": "software-project" },\n'
+            '  "audit": { "type": "transition-control", "mode": "improve", "depth": "deep" },\n'
+            '  "businessConcerns": [\n'
+            '    {\n'
+            '      "id": "safe-transition",\n'
+            '      "type": "question",\n'
+            '      "statement": "Can a new maintainer take control safely?",\n'
+            '      "conclusion": {\n'
+            '        "outcome": "partial",\n'
+            '        "statement": "Only with additional controls",\n'
+            '        "confidence": "high",\n'
+            '        "source": "executive-summary.md"\n'
+            '      }\n'
+            '    }\n'
+            '  ],\n'
+            '  "evidence": {\n'
+            '    "cutoff": "2026-07-12",\n'
+            '    "sources": [],\n'
+            '    "accessBoundary": { "level": "unknown" }\n'
+            '  },\n'
+            '  "execution": {\n'
+            '    "generator": { "name": "wgo-audit" },\n'
+            '    "reviewers": []\n'
+            '  },\n'
+            '  "relationships": {\n'
+            '    "baseline": null,\n'
+            '    "previousAudit": null,\n'
+            '    "comparesTo": [],\n'
+            '    "supersedes": null\n'
+            '  }\n'
+            '}\n',
+        )
+
     def write_reviewer(self) -> None:
         self.write("reviewer-reports/architecture/report.md", "# Architecture\n\n" + "\n\n".join(validator.REVIEWER_HEADINGS))
         self.write("reviewer-reports/architecture/handoff.md", "# Architecture Handoff\n\n" + "\n\n".join(validator.HANDOFF_HEADINGS))
@@ -122,6 +119,7 @@ class ValidateAuditStructureTests(unittest.TestCase):
         self.write_reviewer()
         result = validator.validate(self.root)
         self.assertEqual([], result.errors)
+        self.assertFalse((self.root / "manifest.json").exists())
 
     def test_missing_lean_administration_is_an_error(self) -> None:
         (self.root / "audit-brief.md").unlink()
@@ -132,25 +130,29 @@ class ValidateAuditStructureTests(unittest.TestCase):
         self.write(
             "manifest.json",
             '{\n'
+            '  "$schema": "https://wgo-audit.com/schemas/manifest/1.0.0.json",\n'
             '  "schemaVersion": "1.0.0",\n'
             '  "asset": "legacy",\n'
-            '  "report": { "entrypoint": "missing.md" },\n'
-            '  "subject": {},\n'
-            '  "audit": {},\n'
+            '  "report": { "id": "acme", "title": "Audit", "entrypoint": "index.md" },\n'
+            '  "subject": { "id": "acme", "name": "Acme", "kind": "software-project" },\n'
+            '  "audit": { "type": "transition", "mode": "improve", "depth": "deep" },\n'
+            '  "businessConcerns": [\n'
+            '    { "id": "same", "type": "question", "statement": "Ready?",\n'
+            '      "conclusion": { "outcome": "yes", "statement": "Yes", "confidence": "certain", "source": "index.md" } },\n'
+            '    { "id": "same", "type": "question", "statement": "Still ready?",\n'
+            '      "conclusion": { "outcome": "unknown", "statement": "Unknown" } }\n'
+            '  ],\n'
             '  "evidence": {\n'
+            '    "cutoff": "2026-07-12",\n'
             '    "sources": [\n'
             '      { "kind": "git-repository", "commit": "abc123" }\n'
-            '    ]\n'
+            '    ],\n'
+            '    "accessBoundary": { "level": "unknown" }\n'
             '  },\n'
             '  "execution": {\n'
+            '    "generator": { "name": "wgo-audit" },\n'
             '    "reviewers": [\n'
             '      { "id": "architecture", "version": null, "status": "done" }\n'
-            '    ]\n'
-            '  },\n'
-            '  "results": {\n'
-            '    "conclusions": [\n'
-            '      { "id": "same", "confidence": "certain", "severity": "urgent" },\n'
-            '      { "id": "same" }\n'
             '    ]\n'
             '  },\n'
             '  "relationships": { "baseline": "TODO" }\n'
@@ -163,9 +165,136 @@ class ValidateAuditStructureTests(unittest.TestCase):
         self.assertTrue(any("unresolved TODO/TBD placeholder" in error for error in errors))
         self.assertTrue(any("commit must be a full Git SHA" in error for error in errors))
         self.assertTrue(any("status is invalid: done" in error for error in errors))
-        self.assertTrue(any("duplicate conclusion id: same" in error for error in errors))
+        self.assertTrue(any("duplicate business concern id: same" in error for error in errors))
         self.assertTrue(any("confidence is invalid: certain" in error for error in errors))
-        self.assertTrue(any("severity is invalid: urgent" in error for error in errors))
+
+    def test_manifest_required_shapes_and_controlled_values_are_enforced(self) -> None:
+        self.write("index.md")
+        self.write("executive-summary.md")
+        self.write_manifest()
+        baseline = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+        cases = (
+            (("$schema",), "wrong", "$schema must be"),
+            (("schemaVersion",), "2.0.0", "schemaVersion must be"),
+            (("report", "id"), "", "report.id must be"),
+            (("report", "entrypoint"), "missing.md", "entrypoint does not exist"),
+            (("subject", "name"), "", "subject.name must be"),
+            (("audit", "type"), "", "audit.type must be"),
+            (("audit", "mode"), "full", "audit.mode is invalid"),
+            (("audit", "depth"), "maximum", "audit.depth is invalid"),
+            (("businessConcerns",), [], "must include at least one concern"),
+            (("businessConcerns",), {}, "businessConcerns must be an array"),
+            (("businessConcerns", 0), "bad", "businessConcerns[0] must be an object"),
+            (("businessConcerns", 0, "id"), "", ".id must be a non-empty string"),
+            (("businessConcerns", 0, "type"), "request", ".type is invalid"),
+            (("businessConcerns", 0, "statement"), "", ".statement must be a non-empty string"),
+            (("businessConcerns", 0, "conclusion"), None, ".conclusion must be an object"),
+            (("businessConcerns", 0, "conclusion", "outcome"), "maybe", ".outcome is invalid"),
+            (("businessConcerns", 0, "conclusion", "statement"), "", ".conclusion.statement must be"),
+            (("businessConcerns", 0, "conclusion", "source"), "/tmp/report.md", "must be a relative report path"),
+            (("businessConcerns", 0, "conclusion", "source"), "missing.md", "conclusion.source does not exist"),
+            (("evidence", "cutoff"), "July 12", "evidence.cutoff must be"),
+            (("evidence", "sources"), {}, "evidence.sources must be an array"),
+            (("evidence", "sources"), ["bad"], "evidence.sources[0] must be an object"),
+            (("evidence", "accessBoundary"), None, "evidence.accessBoundary must be"),
+            (("execution", "generator", "name"), "", "execution.generator.name must be"),
+            (("execution", "reviewers"), {}, "execution.reviewers must be an array"),
+            (("execution", "reviewers"), ["bad"], "execution.reviewers[0] must be an object"),
+            (("execution", "reviewers"), [{"id": "architecture", "status": "completed"}], "missing field: version"),
+            (("relationships",), [], "relationships must be an object"),
+        )
+        for path, value, expected in cases:
+            with self.subTest(path=path, value=value):
+                candidate = json.loads(json.dumps(baseline))
+                target = candidate
+                for part in path[:-1]:
+                    target = target[part]
+                target[path[-1]] = value
+                self.write("manifest.json", json.dumps(candidate))
+                self.assertTrue(
+                    any(expected in error for error in validator.validate(self.root).errors),
+                    expected,
+                )
+
+    def test_manifest_cost_summary_is_validated(self) -> None:
+        self.write("index.md")
+        self.write("executive-summary.md")
+        self.write("controls/cost-estimate.md")
+        self.write_manifest()
+        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+        valid_cost = {
+            "basis": "api-equivalent",
+            "coverage": "audit",
+            "status": "final",
+            "currency": "USD",
+            "totalUsd": 12.35,
+            "source": "controls/cost-estimate.md",
+        }
+        manifest["execution"]["costEstimate"] = valid_cost
+        self.write("manifest.json", json.dumps(manifest))
+        result = validator.Result()
+        validator.check_manifest(self.root, result)
+        self.assertEqual([], result.errors)
+
+        unreconciled = dict(valid_cost)
+        unreconciled.update(
+            {
+                "status": "unreconciled",
+                "totalUsd": None,
+                "reconciledSubtotalUsd": 11.25,
+            }
+        )
+        manifest["execution"]["costEstimate"] = unreconciled
+        self.write("manifest.json", json.dumps(manifest))
+        result = validator.Result()
+        validator.check_manifest(self.root, result)
+        self.assertEqual([], result.errors)
+
+        cases = (
+            ([], "must be an object or null"),
+            ({**valid_cost, "basis": "invoice"}, "basis must be api-equivalent"),
+            ({**valid_cost, "coverage": "all"}, "coverage is invalid"),
+            ({**valid_cost, "status": "partial"}, "status is invalid"),
+            ({**valid_cost, "currency": "CAD"}, "currency must be USD"),
+            ({key: value for key, value in valid_cost.items() if key != "totalUsd"}, "missing field: totalUsd"),
+            ({**valid_cost, "totalUsd": None}, "dollars-and-cents number for final"),
+            ({**valid_cost, "totalUsd": 12.345}, "dollars-and-cents number for final"),
+            ({**unreconciled, "totalUsd": 11.25}, "must be null for unreconciled"),
+            ({**unreconciled, "reconciledSubtotalUsd": -1}, "dollars-and-cents number"),
+            ({**unreconciled, "reconciledSubtotalUsd": 11.255}, "dollars-and-cents number"),
+            ({**valid_cost, "reconciledSubtotalUsd": 12.35}, "must be omitted for final"),
+            ({**valid_cost, "source": "/tmp/cost.md"}, "must be a relative report path"),
+            ({**valid_cost, "source": "controls/missing.md"}, "source does not exist"),
+        )
+        for cost_estimate, expected in cases:
+            with self.subTest(cost_estimate=cost_estimate):
+                candidate = json.loads(json.dumps(manifest))
+                candidate["execution"]["costEstimate"] = cost_estimate
+                self.write("manifest.json", json.dumps(candidate))
+                result = validator.Result()
+                validator.check_manifest(self.root, result)
+                self.assertTrue(any(expected in error for error in result.errors), expected)
+
+    def test_manifest_rejects_missing_keys_and_invalid_json_roots(self) -> None:
+        self.write("manifest.json", "not json")
+        self.assertTrue(any("invalid JSON" in error for error in validator.validate(self.root).errors))
+
+        self.write("manifest.json", "[]")
+        self.assertIn(
+            "manifest.json must contain a JSON object",
+            validator.validate(self.root).errors,
+        )
+
+        self.write("index.md")
+        self.write("executive-summary.md")
+        self.write_manifest()
+        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+        manifest.pop("businessConcerns")
+        self.write("manifest.json", json.dumps(manifest))
+        self.assertIn(
+            "manifest.json missing required top-level key: businessConcerns",
+            validator.validate(self.root).errors,
+        )
 
     def test_old_status_file_is_not_required(self) -> None:
         self.write_reviewer()
@@ -365,11 +494,16 @@ class ValidateAuditStructureTests(unittest.TestCase):
 
     def test_final_and_cli_exit_status(self) -> None:
         self.write_reviewer()
-        for relative in validator.FINAL_REQUIRED:
+        for relative, headings in validator.FINAL_HEADINGS.items():
             self.write(
                 relative,
-                f"# {relative}\n\n" + "\n\n".join(validator.FINAL_HEADINGS[relative]),
+                f"# {relative}\n\n" + "\n\n".join(headings),
             )
+        self.assertIn(
+            "Missing required file: manifest.json",
+            validator.validate(self.root, require_final=True).errors,
+        )
+        self.write_manifest()
         self.assertEqual([], validator.validate(self.root, require_final=True).errors)
         output = io.StringIO()
         with mock.patch.object(sys, "argv", ["validator", str(self.root)]):

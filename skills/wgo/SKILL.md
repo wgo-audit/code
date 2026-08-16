@@ -113,8 +113,9 @@ reading an output template that has not been selected.
 - Status: `references/common/reviewer-audit.md`.
 - Synthesis: `references/common/synthesis.md`,
   `references/common/evidence-rules.md`, `references/common/reconciliation.md`,
-  `references/templates/report-templates.md`, and, after synthesis validation,
-  the matching cost workflow below.
+  and `references/templates/report-templates.md`. After the audience reports
+  are final, read `references/templates/manifest-template.json`; after
+  synthesis validation, read the matching cost workflow below.
 - Cost estimation: select exactly one provider workflow from the platform in
   `audit-brief.md`: Codex `references/common/cost-estimation.md`, Claude
   `references/common/cost-estimation-claude.md`, or OpenCode
@@ -123,7 +124,8 @@ reading an output template that has not been selected.
   discover and freeze the audit-session manifest before calculation, run
   exactly two independent provider-specific verification passes over that same
   manifest, and write `controls/cost-estimate.md` with its frozen calculation
-  evidence. A missing or unsupported platform is `Unreconciled`, never an
+  evidence, then refresh `manifest.json`'s lean cost summary. A missing or
+  unsupported platform is `Unreconciled`, never an
   invitation to inspect another provider's records.
 - Operationalize: `references/common/operationalization.md`,
   `references/common/evidence-rules.md`, the selected template(s), and then
@@ -135,7 +137,7 @@ reading an output template that has not been selected.
 _whats-going-on-YYYYMMDD/
   audit-brief.md
   audit-checklist.md
-  manifest.json
+  manifest.json             # synthesis output
   documentation/
     catalog.md
   evidence/

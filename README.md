@@ -195,9 +195,12 @@ Every completed audit creates a start-here index and reports for three audiences
 All audit artifacts live under a dated `_whats-going-on-YYYYMMDD/` root. New
 audits begin with a brief, one checklist, reusable evidence ledger,
 source-access register, shared open items, reviewer reports and compact
-handoffs, selected reviewer-owned artifacts, a JSON manifest, and the four final
-reports. The source project and external systems remain read-only unless the
-auditor separately authorizes a change.
+handoffs, and selected reviewer-owned artifacts. Synthesis creates the four
+final reports, derives the JSON manifest from the approved business concerns
+and final executive conclusions, then adds the cost result after cost closeout.
+Any later cost refresh replaces that manifest summary. The source project and
+external systems remain read-only unless the auditor separately authorizes a
+change.
 
 ### Detailed Control Artifacts
 

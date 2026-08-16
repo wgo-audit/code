@@ -74,15 +74,15 @@ open-item type. Omit an empty lane. Order items by dependency and consequence
 within that lane; do not compare P labels across lanes or create a second
 backlog.
 
-Update `manifest.json` after the four audience reports are created. Preserve
-the schema `1.0.0` top-level contract and fill only evidence-supported values:
-report title, generated date when supported, subject identity, audit type and
-mode, evidence cutoff and sources, generator and reviewer versions when known,
-headline/result conclusions with stable IDs, and explicit relationships for
-compare or blind-compare runs. Do not invent generator commits, reviewer
-versions, model names, finding counts, timestamps, or source citations. Omit
-unsupported optional fields; for required unknowns use `null`, `[]`, or a
-controlled `unknown` value.
+After the four audience reports are final, read
+`../templates/manifest-template.json` and create the initial `manifest.json`.
+Ensure
+the executive summary answers every Business Concerns row; state `unknown` when
+the evidence cannot answer it. Pair each row with that supported conclusion.
+Copy only supported audit metadata, source boundaries, reviewer versions, and
+relationships, preserving concern IDs and explicit comparison baselines. Do
+not invent values or copy report prose. Validate the completed manifest before
+cost closeout.
 
 ## Cost Closeout
 
@@ -95,6 +95,12 @@ end-of-audit phase, before the operationalization question. It creates
 from `index.md`, `executive-summary.md`,
 `product-manager-notes.md`, and `technical-lead-notes.md` as an
 API-equivalent estimate with its reconciliation status.
+
+After the cost control and machine-readable results are final, update
+`manifest.json` at `execution.costEstimate` exactly as defined by
+`../templates/cost-estimate-template.md`, then validate the manifest again.
+This post-cost refresh is part of synthesis completion even when the result is
+`Unreconciled`.
 
 Immediately before starting that cost workflow, emit this normal progress
 message once: `Synthesis validated; starting cost estimation. <!--

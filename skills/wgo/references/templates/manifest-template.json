@@ -1,0 +1,40 @@
+{
+  "$schema": "https://wgo-audit.com/schemas/manifest/1.0.0.json",
+  "schemaVersion": "1.0.0",
+  "report": {
+    "id": "",
+    "title": "",
+    "entrypoint": "index.md"
+  },
+  "subject": {
+    "id": "",
+    "name": "",
+    "kind": "other"
+  },
+  "audit": {
+    "type": "",
+    "mode": "unknown",
+    "depth": "deep"
+  },
+  "businessConcerns": [],
+  "evidence": {
+    "cutoff": "",
+    "sources": [],
+    "accessBoundary": {
+      "level": "unknown"
+    }
+  },
+  "execution": {
+    "generator": {
+      "name": "wgo-audit"
+    },
+    "reviewers": [],
+    "costEstimate": null
+  },
+  "relationships": {
+    "previousAudit": null,
+    "baseline": null,
+    "comparesTo": [],
+    "supersedes": null
+  }
+}

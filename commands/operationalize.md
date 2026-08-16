@@ -33,4 +33,6 @@ Hard rules:
   recorded in `audit-brief.md`. Update
   `controls/cost-estimate.md` through operationalization without modifying the
   frozen audit-only cost evidence or charging either cost-calculation phase to
-  the audit.
+  the audit. Replace `manifest.json`'s `execution.costEstimate` with the
+  refreshed `audit-and-operationalization` result and validate the manifest
+  again.
