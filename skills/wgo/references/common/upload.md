@@ -59,6 +59,13 @@ Before creating Git state, require all of the following:
 Reports are immutable. Query the configured repository and refuse an existing
 destination even when its contents differ. Do not offer an overwrite.
 
+The report repository must treat generated catalog/index files as its own
+post-merge responsibility. A WGO upload PR is destination-only: it must not
+include `README.md`, per-subject README files, `audits/index.json`, or any
+other repository-level generated index. If the report repository's pull-request
+checks require generated indexes to be committed in the same PR, stop and
+report that the repository contract is incompatible with pull-less upload.
+
 ## GitHub Preflight And Approval
 
 Require `git` and `gh`, an authenticated `gh` session, and push permission to
