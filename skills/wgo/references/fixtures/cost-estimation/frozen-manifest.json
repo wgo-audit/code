@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "coverage": "audit",
   "root_session_id": "ses-root",
   "session_search_roots": ["fixture directory"],
@@ -47,16 +47,16 @@
     {
       "session_id": "ses-child",
       "file_path": "child.jsonl",
-      "prefix_sha256": "d178ce20cf1f3d1c717a1b873c357944698ebe83f81a262a5454b1b8a6cd5933",
+      "prefix_sha256": "8644be291bb25f425f5c4ddce9ecc895705ddcb5483defaf454e29de7d14798a",
       "wgo_role_task_name": "wgo reviewer: code-quality",
       "phase": "audit",
       "parent_session_id": "ses-root",
       "root_relationship": "descendant",
       "decision": "included",
       "rationale": "Root sub_agent_activity and matching child thread_spawn, task_started, and task_complete records name ses-root and code-quality.",
-      "session_meta": {"line_number": 4, "session_id": "ses-child"},
+      "session_meta": {"line_number": 1, "session_id": "ses-child"},
       "lifecycle": {
-        "task_id": "task-code-quality",
+        "turn_id": "turn-child-review",
         "start": {"event": "task_started", "line_number": 5},
         "terminal": {"event": "task_complete", "outcome": "completed", "line_number": 10}
       },
@@ -67,20 +67,20 @@
     {
       "session_id": "ses-nested",
       "file_path": "nested-child.jsonl",
-      "prefix_sha256": "46224cc928440cd85d8049a37d9399f53258c18072ca8a95b2974a2dd2846e1d",
+      "prefix_sha256": "00f5f2b4a688c0181e1f2509d3c2d70c8f406598e79a481ee6bddfda848baf8d",
       "wgo_role_task_name": "code-quality artifact quality check",
       "phase": "audit",
       "parent_session_id": "ses-child",
       "root_relationship": "descendant",
       "decision": "included",
       "rationale": "The included code-quality child records the nested spawn; matching nested thread_spawn, task_started, and task_complete records identify its bounded quality-check task.",
-      "session_meta": {"line_number": 10, "session_id": "ses-nested"},
+      "session_meta": {"line_number": 1, "session_id": "ses-nested"},
       "lifecycle": {
-        "task_id": "task-quality-check",
+        "turn_id": "turn-quality-check",
         "start": {"event": "task_started", "line_number": 11},
-        "terminal": {"event": "task_complete", "outcome": "completed", "line_number": 15}
+        "terminal": {"event": "turn_aborted", "outcome": "interrupted", "line_number": 15}
       },
-      "cutoff": {"provenance": "task_complete", "line_number": 15},
+      "cutoff": {"provenance": "turn_aborted", "line_number": 15},
       "provenance": [{"kind": "sub_agent_activity"}, {"kind": "thread_spawn"}, {"kind": "task_started"}, {"kind": "task_complete"}],
       "usage_schema": "codex-rollout-token-count-v1"
     }

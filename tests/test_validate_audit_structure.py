@@ -166,6 +166,87 @@ class ValidateAuditStructureTests(unittest.TestCase):
         matching = [error for error in errors if "POSIX absolute local path" in error]
         self.assertEqual(1, len(matching))
 
+    def test_publication_rejects_codex_session_ids(self) -> None:
+        session_id = "01a01b8d-cad8-7590-981f-b98b37a0cc36"
+        self.write("controls/cost-estimate.md", f"Session: {session_id}\n")
+
+        errors = validator.validate(self.root, require_public=True).errors
+
+        self.assertTrue(any("contains a Codex session identifier" in error for error in errors))
+
+    def test_publication_rejects_temporary_cost_evidence(self) -> None:
+        self.write("controls/cost-terra-pass-a.json", "{}\n")
+
+        errors = validator.validate(self.root, require_public=True).errors
+
+        self.assertTrue(any("is temporary cost evidence" in error for error in errors))
+
+    def test_publication_warns_for_broader_access_boundary_without_blocking(self) -> None:
+        self.write("index.md")
+        self.write_manifest()
+        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+        manifest["evidence"]["accessBoundary"]["level"] = (
+            "source-and-public-evidence-only"
+        )
+        self.write("manifest.json", json.dumps(manifest))
+
+        result = validator.Result()
+        validator.check_public_access_boundary(self.root, result)
+
+        self.assertEqual([], result.errors)
+        self.assertTrue(
+            any(
+                "source-and-public-evidence-only, not public-only" in warning
+                and "explicit auditor acknowledgement" in warning
+                for warning in result.warnings
+            )
+        )
+
+        manifest["evidence"]["accessBoundary"]["level"] = "public-only"
+        self.write("manifest.json", json.dumps(manifest))
+        result = validator.Result()
+        validator.check_public_access_boundary(self.root, result)
+        self.assertEqual([], result.warnings)
+
+    def test_publication_requires_a_matching_alias_only_cost_receipt(self) -> None:
+        self.write("index.md")
+        self.write("controls/cost-estimate.md")
+        self.write_manifest()
+        manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+        manifest["execution"]["costEstimate"] = {
+            "basis": "api-equivalent",
+            "coverage": "audit",
+            "status": "final",
+            "currency": "USD",
+            "totalUsd": 12.35,
+            "source": "controls/cost-estimate.md",
+        }
+        self.write("manifest.json", json.dumps(manifest))
+
+        errors = validator.validate(self.root, require_public=True).errors
+        self.assertIn(
+            "Missing public cost receipt: controls/cost-calculation.json", errors
+        )
+
+        receipt = {
+            "schema_version": 1,
+            "coverage": "audit",
+            "status": "final",
+            "currency": "USD",
+            "pricing_basis": {"id": "rate-card"},
+            "verification": {
+                "independent_passes": 2,
+                "normalized_match": True,
+                "calculation_issues": 0,
+            },
+            "rows": [],
+            "totals": {"exact_cost_usd": "12.345"},
+            "limitations": {"provider_identifiers_persisted": False},
+        }
+        self.write("controls/cost-calculation.json", json.dumps(receipt))
+        errors = validator.validate(self.root, require_public=True).errors
+        self.assertFalse(any("cost-calculation.json" in error for error in errors))
+
     def test_portable_artifact_locators_and_urls_are_allowed(self) -> None:
         self.write(
             "audit-brief.md",

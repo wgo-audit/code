@@ -24,8 +24,10 @@ unsupported, write an `Unreconciled` cost control naming that limitation rather
 than guessing.
 
 This is a read-only analysis of accessible provider-native session records that
-writes `<audit-root>/controls/cost-estimate.md` and its frozen calculation
-evidence, then updates `<audit-root>/manifest.json` at
+writes `<audit-root>/controls/cost-estimate.md` and the alias-only
+`<audit-root>/controls/cost-calculation.json`. Keep provider-native manifests
+and independent pass files under `tmp_debug/wgo-cost/<audit-id>/`, outside the
+audit root. Then update `<audit-root>/manifest.json` at
 `execution.costEstimate` with the result's exact total or explicitly labeled
 unreconciled subtotal.
 Do not install a package, invoke `ccusage`, add a helper program, or use an
@@ -34,6 +36,9 @@ The active-platform coordinator discovers the audit descendants from recorded
 collaboration and task-lifecycle provenance, freezes the manifest before any
 calculation, and runs exactly two independent calculations over that unchanged
 manifest using the worker configuration in the selected provider workflow.
+If an earlier immutable manifest is unreconciled because of a demonstrated
+provider-schema adapter error, preserve it and create the workflow's versioned
+repair manifest and matching result files.
 Never identify an included session solely by date, CWD, folder, or model; those
 may corroborate recorded provenance only.
 After every calculation or refresh, follow

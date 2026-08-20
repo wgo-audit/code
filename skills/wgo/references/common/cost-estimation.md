@@ -25,7 +25,10 @@ control with that exact limit; do not estimate an assumed session set.
 Scan accessible JSONL files, not a date, CWD, project folder, or model filter.
 Those attributes may corroborate a result but never establish membership. From
 the root transcript, recursively follow only recorded Codex/WGO collaboration
-spawn links and corresponding task-lifecycle records. For every candidate,
+spawn links and corresponding task-lifecycle records. Treat the transcript as
+a versioned provider schema: current Codex Desktop records lifecycle
+correlation in `payload.turn_id`, while older records may use
+`payload.task_id`. For every candidate,
 resolve its session ID to its own JSONL record and require provenance that ties
 the spawned task to its parent and WGO role/task name. A missing child file,
 missing lifecycle correlation, ambiguous parent, or unrelated later reuse is a
@@ -44,12 +47,19 @@ if none exists, emit the audit-only marker before calculation. The root prefix
 may contain an earlier cost phase when operationalization follows synthesis;
 phase attribution below excludes its requests. For every descendant, record
 both boundaries of its WGO task lifecycle: the `task_started` line and exactly
-one terminal `task_complete`, `task_failed`, `task_cancelled`, or
-`task_interrupted` line. Parse only that inclusive interval. Do not parse
+one correlated terminal `task_complete`, `task_failed`, `task_cancelled`,
+`task_interrupted`, or `turn_aborted` line. Correlate on `turn_id` when
+present, falling back to the legacy `task_id` only when that is the field
+actually observed. Parse only that inclusive interval. Do not parse
 inherited history before `task_started`; when a session later does unrelated
 work, stop at its terminal audit-task event. Record the exact child-specific
 `session_meta` line separately and require its session ID to match the
-manifest. Never select whichever metadata record happens to appear last. Use
+manifest. A current child transcript normally places that metadata first,
+before inherited history. In current child metadata, `payload.id` is the child
+session ID while `payload.session_id` may retain the forked root; use
+`payload.id` when present and fall back to `payload.session_id` only for a
+legacy record that has no `id`. Never select whichever metadata record happens
+to appear last. Use
 recorded lifecycle markers and line positions (plus stable record IDs when
 present), not a timestamp alone. Hash the exact byte prefix through each
 cutoff, including its terminating newline when present. Do not hash the whole
@@ -62,23 +72,33 @@ recorded terminal outcome. An open, multiply terminated, or ambiguously
 correlated task blocks synthesis; it is not silently dropped from the cost
 manifest.
 
-Before calculation, freeze `<audit-root>/controls/cost-manifest.json` for the
-audit-only closeout or
-`<audit-root>/controls/cost-manifest-operationalized.json` for the refresh.
+Before calculation, freeze
+`<project-root>/tmp_debug/wgo-cost/<audit-id>/cost-manifest.json` for the
+audit-only closeout or `cost-manifest-operationalized.json` beside it for the
+refresh.
 Each is an immutable input for its calculation; never revise the audit-only
 file or either manifest to make worker results match. The refreshed manifest
 must list delegated earlier cost sessions as explicit exclusions and exclude
 same-session cost requests through its phase policy. It must contain, at
 minimum:
 
-Resolve the Codex session-store root as a transient runtime path. Every
-`file_path` persisted in the manifest is a portable path relative to that root;
-never store the root or an absolute session path in an audit artifact. Pass the
-runtime root separately to the one-off recipe.
+If an earlier closeout froze an `Unreconciled` manifest because its inspected
+Codex schema was wrong, preserve that evidence and create the next available
+`cost-manifest-repair-N.json`. Record the superseded manifest's portable path,
+SHA-256, and reason in `supersedes`; use the same `-repair-N` suffix for both
+worker result files. A repair corrects a demonstrated adapter/schema error; it
+never changes membership merely to force agreement.
+
+These provider-native manifests and calculation results are temporary working
+data. They may retain provider session identifiers needed for verification,
+but they never enter the audit root or `wgo:upload`. Resolve the Codex
+session-store root as a transient runtime path. Every `file_path` in the
+temporary manifest is relative to that root. Pass the runtime root separately
+to the one-off recipe.
 
 ```json
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "coverage": "audit",
   "root_session_id": "ses_root",
   "session_store": "codex-session-store",
@@ -131,9 +151,9 @@ runtime root separately to the one-off recipe.
       "root_relationship": "descendant",
       "decision": "included",
       "rationale": "Recorded spawn, matching child metadata, and one bounded lifecycle.",
-      "session_meta": {"line_number": 64, "session_id": "ses_child"},
+      "session_meta": {"line_number": 1, "session_id": "ses_child"},
       "lifecycle": {
-        "task_id": "task_code_quality",
+        "turn_id": "turn_code_quality",
         "start": {"event": "task_started", "line_number": 65},
         "terminal": {"event": "task_complete", "outcome": "completed", "line_number": 92}
       },
@@ -192,7 +212,9 @@ it is cumulative and forked agents can inherit parent context.
 Use root `event_msg` `sub_agent_activity` records (`event_id`,
 `agent_thread_id`, `agent_path`, `kind: started`) together with the child
 `session_meta.payload.source.subagent.thread_spawn` and child `event_msg`
-`task_started` plus terminal records to establish provenance. If a raw
+`task_started` plus correlated terminal records to establish provenance. The
+current lifecycle key is `turn_id`; accept `task_id` only as a legacy adapter
+when the inspected records contain it. If a raw
 token-count record carries a stable request/event ID, deduplicate it globally
 and retain duplicate locations. If legacy `token_count` has no stable ID,
 treat `last_token_usage` as request state: within the same session, turn,
@@ -378,13 +400,12 @@ for session in manifest["sessions"]:
         continue
     meta_record = decode_record(byte_lines[meta_line - 1], session_id, meta_line)
     meta_payload = meta_record.get("payload", {}) if isinstance(meta_record, dict) else {}
-    observed_meta_ids = {value for value in (meta_payload.get("id"), meta_payload.get("session_id"))
-                         if isinstance(value, str) and value}
+    observed_meta_id = meta_payload.get("id") or meta_payload.get("session_id")
     if (not isinstance(meta_record, dict) or meta_record.get("type") != "session_meta" or
-            not observed_meta_ids or observed_meta_ids != {session_id} or
+            observed_meta_id != session_id or
             meta_spec.get("session_id") != session_id):
         issues.append({"kind": "session-meta-mismatch", "session_id": session_id,
-                       "line_number": meta_line, "observed_session_ids": sorted(observed_meta_ids)})
+                       "line_number": meta_line, "observed_session_id": observed_meta_id})
         continue
 
     start_line = 1
@@ -400,9 +421,11 @@ for session in manifest["sessions"]:
         start_record = decode_record(byte_lines[start_line - 1], session_id, start_line)
         terminal_record = decode_record(byte_lines[terminal_line - 1], session_id, terminal_line)
         start_event, terminal_event = lifecycle_event(start_record), lifecycle_event(terminal_record)
-        allowed_terminal_events = {"task_complete", "task_failed", "task_cancelled", "task_interrupted"}
+        allowed_terminal_events = {"task_complete", "task_failed", "task_cancelled",
+                                   "task_interrupted", "turn_aborted"}
         terminal_outcomes = {"task_complete": "completed", "task_failed": "failed",
-                             "task_cancelled": "cancelled", "task_interrupted": "interrupted"}
+                             "task_cancelled": "cancelled", "task_interrupted": "interrupted",
+                             "turn_aborted": "interrupted"}
         if start_event != "task_started" or start.get("event") != start_event:
             issues.append({"kind": "lifecycle-start-mismatch", "session_id": session_id,
                            "line_number": start_line, "observed_event": start_event})
@@ -413,13 +436,15 @@ for session in manifest["sessions"]:
             issues.append({"kind": "lifecycle-terminal-mismatch", "session_id": session_id,
                            "line_number": terminal_line, "observed_event": terminal_event})
             continue
-        task_id = lifecycle.get("task_id")
+        correlation_field = "turn_id" if lifecycle.get("turn_id") else "task_id"
+        correlation_id = lifecycle.get(correlation_field)
         start_payload = start_record.get("payload", {})
         terminal_payload = terminal_record.get("payload", {})
-        if (not isinstance(task_id, str) or not task_id or
-                start_payload.get("task_id") != task_id or terminal_payload.get("task_id") != task_id):
-            issues.append({"kind": "lifecycle-task-mismatch", "session_id": session_id,
-                           "task_id": task_id})
+        if (not isinstance(correlation_id, str) or not correlation_id or
+                start_payload.get(correlation_field) != correlation_id or
+                terminal_payload.get(correlation_field) != correlation_id):
+            issues.append({"kind": "lifecycle-correlation-mismatch", "session_id": session_id,
+                           "field": correlation_field, "correlation_id": correlation_id})
             continue
         task_events = []
         for candidate_line in range(start_line, terminal_line + 1):
@@ -429,13 +454,15 @@ for session in manifest["sessions"]:
                 continue
             candidate_payload = candidate.get("payload", {})
             candidate_event = lifecycle_event(candidate)
-            if (isinstance(candidate_payload, dict) and candidate_payload.get("task_id") == task_id and
+            if (isinstance(candidate_payload, dict) and
+                    candidate_payload.get(correlation_field) == correlation_id and
                     candidate_event in allowed_terminal_events | {"task_started"}):
                 task_events.append({"event": candidate_event, "line_number": candidate_line})
         if task_events != [{"event": "task_started", "line_number": start_line},
                            {"event": terminal_event, "line_number": terminal_line}]:
             issues.append({"kind": "lifecycle-event-count", "session_id": session_id,
-                           "task_id": task_id, "events": task_events})
+                           "field": correlation_field, "correlation_id": correlation_id,
+                           "events": task_events})
             continue
 
     active_turn = {}
@@ -569,7 +596,8 @@ pass. For audit-only coverage, preserve the raw results as
 `cost-terra-pass-a.json` and `cost-terra-pass-b.json`. For operationalized
 coverage, use `cost-terra-operationalized-pass-a.json` and
 `cost-terra-operationalized-pass-b.json`. Keep them beside their manifest; they
-are calculation evidence, not substitutes for the readable control.
+are temporary verification data, not audit artifacts. After comparison, retain
+them only in `tmp_debug` for troubleshooting; never copy them into the audit.
 
 ## 3. Independent Terra Verification
 
@@ -587,6 +615,17 @@ standard-library parser) with request IDs, duplicate locations, totals by
 session/model/tier/context band, and flags. They do not discover more sessions,
 change the manifest, decide eligibility, or price an absent rate.
 
+Before launching them, resolve and verify a neutral system temporary directory
+that exists on the current platform, then use it as each worker's initial
+working directory while passing the manifest, session-store root, and rate card
+as explicit transient absolute inputs. This prevents a deleted, moved, cloud-
+synced, or inherited project CWD from blocking process creation. A launch that
+fails before calculation because its CWD is unavailable may be retried from the
+verified temporary directory without changing the frozen manifest. Wait for a
+worker that is still making progress; do not interrupt it merely because the
+calculation is slower than expected. A terminal worker failure is recorded
+loudly and leaves the estimate `Unreconciled`.
+
 Terra compares both tables exactly after normalizing table order. Investigate
 every mismatch by naming the session ID, request/event ID, JSONL line, field,
 and worker values. Do not calculate a final total while any mismatch remains.
@@ -594,15 +633,21 @@ and worker values. Do not calculate a final total while any mismatch remains.
 ## 4. Write The Cost Control
 
 Read `../templates/cost-estimate-template.md` immediately before writing
-`<audit-root>/controls/cost-estimate.md` and follow it exactly.
+`<audit-root>/controls/cost-estimate.md` and
+`<audit-root>/controls/cost-calculation.json`; follow it exactly.
 
 Identify the pricing basis, source URL, rate-card date, currency, recorded
 service tiers/context bands, coverage (`audit` or
 `audit-and-operationalization`), and the exact formula. List the full manifest,
 phase boundaries, excluded phases/requests, and session exclusions with their
-rationales; link or reference the applicable frozen manifest and two Terra
-tables. For refreshed coverage, also link the preserved audit-only manifest and
-state that `cost-estimate.md` supersedes only the earlier readable estimate.
+rationales. Replace every provider session, turn, task, request, message, event,
+and source-filename identifier with deterministic audit-local aliases such as
+`session-001`; never copy a provider identifier into either public cost
+artifact. Write exact aliased rows, totals, rate-card identity, temporary input
+digest, pass count, normalized-match result, and pass-result digests to
+`cost-calculation.json`. Link that receipt from `cost-estimate.md`. For refreshed
+coverage, preserve the earlier public receipt and state that the readable
+estimate supersedes only its earlier version.
 The token table must show phase, uncached input, cached input, output, and
 informational reasoning by session, model, service tier, and context band, plus
 phase subtotals.
@@ -612,12 +657,12 @@ request reconciles. Identify each declared service tier and input-threshold
 context band as API-equivalent rather than observed backend billing. List any
 nonzero cache-write tokens as excluded-by-formula limitations.
 
-Keep exact decimal costs in the manifest-linked machine-readable results. In
+Keep exact decimal costs in the public alias-only receipt. In
 `cost-estimate.md`, display every priced rate, row, subtotal, and total as
 `$X.XX`, rounded half up from its exact value. Round the exact total directly;
 never sum already-rounded display rows. Use `unpriced`, not `$0.00`, for a
-missing rate. When a positive exact cost rounds to `$0.00`, link the exact
-machine-readable value so the display is not mistaken for a zero calculation.
+missing rate. When a positive exact cost rounds to `$0.00`, state the exact
+value so the display is not mistaken for a zero calculation.
 
 Set the control's status to one of:
 

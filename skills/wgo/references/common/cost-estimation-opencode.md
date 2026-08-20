@@ -49,8 +49,11 @@ active before the marker; the marker changes only later attribution. Give a
 descendant its phase from the recorded parent WGO task. Record all same-project
 or same-day sessions considered and excluded for lacking the parent/child path.
 
-Write `<audit-root>/controls/cost-manifest-opencode.json`, or
-`cost-manifest-opencode-operationalized.json` for a refresh, before calculating:
+Write
+`<project-root>/tmp_debug/wgo-cost/<audit-id>/cost-manifest-opencode.json`, or
+`cost-manifest-opencode-operationalized.json` beside it for a refresh, before
+calculating. These files are temporary working data outside the audit root; the
+public cost control and receipt use audit-local aliases only:
 
 Keep validated exports under one transient export root. Every `export_path`
 persisted in the manifest is portable and relative to that root; never store
@@ -452,17 +455,18 @@ this prompt:
 You are an OpenCode cost-calculation worker. Use only the frozen manifest and validated exports. De-duplicate assistant messages by info.id, total provider/model token fields, and replay exact per-message cost. Do not discover sessions, add session aggregates, invent rates or cache TTLs, or accept an unexplained zero as free. Flag exact disputed messages and malformed evidence.
 ```
 
-Preserve results as `cost-opencode-pass-a.json` and
+Preserve temporary results beside the manifest as `cost-opencode-pass-a.json` and
 `cost-opencode-pass-b.json` (or `*-operationalized-*`). Compare them exactly
 after normalizing row order. Investigate every mismatch by session, message ID,
 provider/model, and field. Any mismatch remains `Unreconciled`.
 
 Read `../templates/cost-estimate-template.md` immediately before writing
-`controls/cost-estimate.md`. Link the manifest, validated exports, cost-basis
-file, and both results. Show phase/session/provider/model tokens and the exact
+`controls/cost-estimate.md` and the alias-only
+`controls/cost-calculation.json` receipt. Do not link the temporary manifest,
+validated exports, or pass files. Show phase/session/provider/model tokens and the exact
 recorded-cost basis. State that reasoning is separate and cache-write TTL is not
 reported. Publish a total only when all included messages reconcile and are
-priced. Display `$X.XX` while preserving exact decimals in JSON evidence.
+priced. Display `$X.XX` while preserving exact decimals in the public receipt.
 
 Always state that this replays OpenCode's API-equivalent estimate and is not a
 provider invoice. List export availability/validity, OpenCode version, provider

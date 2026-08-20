@@ -21,5 +21,7 @@ repository, destination, commit label, and draft PR before external writes.
 Automatically repair only the Markdown trailing-whitespace and end-of-file
 blank-line defects defined by the workflow. Never otherwise modify the audit to
 make it publishable, create or revise its manifest, call a report-repository
-generation script, publish a non-public evidence boundary, or overwrite an
-existing report.
+generation script, publish a broader-than-`public-only` evidence boundary
+without the auditor's explicit acknowledgement, or overwrite an existing
+report. Exclude only disclosed `.DS_Store` packaging metadata and reject
+provider session identifiers anywhere in the public package.
