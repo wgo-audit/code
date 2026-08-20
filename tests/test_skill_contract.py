@@ -450,6 +450,14 @@ class SkillContractTests(unittest.TestCase):
             operationalization,
         )
         self.assertIn("cost-manifest-operationalized.json", cost)
+        self.assertIn("cost-manifest-repair-N.json", cost)
+        self.assertIn("tmp_debug/wgo-cost/<audit-id>/cost-manifest.json", cost)
+        self.assertIn("controls/cost-calculation.json", cost)
+        self.assertIn("deterministic audit-local aliases", cost)
+        self.assertIn("Never expose a provider-native\nidentifier", cost_template)
+        self.assertIn("neutral system temporary directory", cost)
+        self.assertIn("current lifecycle key is `turn_id`", cost)
+        self.assertIn("versioned\nrepair manifest", cost_command)
         self.assertIn('"excluded": ["cost-estimation"]', cost)
         self.assertIn("phase subtotals", cost)
         self.assertIn("cost-estimate-template.md", cost)
@@ -501,10 +509,16 @@ class SkillContractTests(unittest.TestCase):
         self.assertEqual(10, descendants["ses-child"]["lifecycle"]["terminal"]["line_number"])
         self.assertEqual(11, descendants["ses-nested"]["lifecycle"]["start"]["line_number"])
         self.assertEqual(15, descendants["ses-nested"]["lifecycle"]["terminal"]["line_number"])
+        self.assertEqual("turn_aborted", descendants["ses-nested"]["lifecycle"]["terminal"]["event"])
         child_first = json.loads(
             (fixture / "child.jsonl").read_text(encoding="utf-8").splitlines()[0]
         )
-        self.assertEqual("ses-root", child_first["payload"]["id"])
+        self.assertEqual("ses-child", child_first["payload"]["id"])
+        self.assertEqual("ses-root", child_first["payload"]["session_id"])
+        self.assertEqual(1, descendants["ses-child"]["session_meta"]["line_number"])
+        self.assertEqual(1, descendants["ses-nested"]["session_meta"]["line_number"])
+        self.assertEqual("turn-child-review", descendants["ses-child"]["lifecycle"]["turn_id"])
+        self.assertNotIn("task_id", descendants["ses-child"]["lifecycle"])
         self.assertEqual(
             "ses-child", descendants["ses-child"]["session_meta"]["session_id"]
         )
@@ -692,6 +706,8 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("`/wgo-upload [YYYYMMDD]`", command)
         self.assertIn("The date is optional; when omitted", command)
         self.assertIn("public-only", workflow)
+        self.assertIn("publication\n   warning, not a blocking validation error", workflow)
+        self.assertIn("separately ask the auditor to\nacknowledge", workflow)
         self.assertIn("portable artifact-path", workflow)
         self.assertIn("Do not call or recreate", workflow)
         self.assertIn("agent's native cross-platform filesystem operations", workflow)
@@ -704,8 +720,11 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("never modify its manifest", workflow)
         self.assertIn("When the date is omitted, resolve exactly the newest dated", workflow)
         self.assertIn("files named exactly `.DS_Store`", workflow)
+        self.assertIn("`--require-final --require-public`", workflow)
+        self.assertIn("`controls/cost-calculation.json`", workflow)
         self.assertIn("That filename is the sole\npackaging exclusion", workflow)
         self.assertIn("every other\nsource file exists at the same relative path", workflow)
+        self.assertIn("reject\nprovider session identifiers anywhere", command)
         for clone_option in (
             "--depth 1",
             "--filter=blob:none",

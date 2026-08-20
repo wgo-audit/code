@@ -8,7 +8,7 @@ import json
 import re
 import sys
 from dataclasses import dataclass, field
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 
 
@@ -229,6 +229,10 @@ TEXT_ARTIFACT_SUFFIXES = {
     ".yaml",
     ".yml",
 }
+CODEX_SESSION_ID_PATTERN = re.compile(
+    r"\b01[0-9a-f]{6}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b",
+    re.I,
+)
 NONPORTABLE_PATH_PATTERNS = (
     (
         "POSIX absolute local path",
@@ -772,6 +776,142 @@ def check_portable_paths(root: Path, result: Result) -> None:
                     break
 
 
+def check_publication_safety(root: Path, result: Result) -> None:
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        relative = path.relative_to(root)
+        if path.name.startswith("cost-manifest") or re.fullmatch(
+            r"cost-.*pass.*\.json", path.name
+        ):
+            result.error(
+                f"{relative} is temporary cost evidence; keep it outside the "
+                "audit under tmp_debug/wgo-cost/<audit-id>/"
+            )
+        if path.suffix.lower() not in TEXT_ARTIFACT_SUFFIXES:
+            continue
+        content = read_text(path, result)
+        for line_number, line in enumerate(content.splitlines(), start=1):
+            if CODEX_SESSION_ID_PATTERN.search(line):
+                result.error(
+                    f"{relative}:{line_number} contains a Codex "
+                    "session identifier"
+                )
+
+
+def check_public_access_boundary(root: Path, result: Result) -> None:
+    manifest_path = root / "manifest.json"
+    if not manifest_path.is_file():
+        return
+    manifest = read_json(manifest_path, root, result)
+    if not isinstance(manifest, dict):
+        return
+    evidence = manifest.get("evidence")
+    boundary = evidence.get("accessBoundary") if isinstance(evidence, dict) else None
+    level = boundary.get("level") if isinstance(boundary, dict) else None
+    if level != "public-only":
+        displayed = level if isinstance(level, str) and level else "<missing>"
+        result.warn(
+            "manifest.json evidence.accessBoundary.level is "
+            f"{displayed}, not public-only; upload requires explicit auditor "
+            "acknowledgement of this publication warning"
+        )
+
+
+def check_public_cost_receipt(root: Path, result: Result) -> None:
+    manifest_path = root / "manifest.json"
+    if not manifest_path.is_file():
+        return
+    manifest = read_json(manifest_path, root, result)
+    if not isinstance(manifest, dict):
+        return
+    execution = manifest.get("execution")
+    cost = execution.get("costEstimate") if isinstance(execution, dict) else None
+    if not isinstance(cost, dict):
+        return
+
+    receipt_path = root / "controls" / "cost-calculation.json"
+    if not receipt_path.is_file():
+        result.error("Missing public cost receipt: controls/cost-calculation.json")
+        return
+    receipt = read_json(receipt_path, root, result)
+    if not isinstance(receipt, dict):
+        result.error("controls/cost-calculation.json must contain a JSON object")
+        return
+
+    expected = {
+        "schema_version": 1,
+        "coverage": cost.get("coverage"),
+        "status": cost.get("status"),
+        "currency": cost.get("currency"),
+    }
+    for field, value in expected.items():
+        if receipt.get(field) != value:
+            result.error(
+                f"controls/cost-calculation.json {field} must match the public "
+                f"cost contract: {value}"
+            )
+    if not isinstance(receipt.get("pricing_basis"), dict):
+        result.error("controls/cost-calculation.json pricing_basis must be an object")
+    if not isinstance(receipt.get("rows"), list):
+        result.error("controls/cost-calculation.json rows must be an array")
+
+    verification = receipt.get("verification")
+    if not isinstance(verification, dict):
+        result.error("controls/cost-calculation.json verification must be an object")
+    else:
+        if verification.get("independent_passes") != 2:
+            result.error(
+                "controls/cost-calculation.json verification.independent_passes "
+                "must be 2"
+            )
+        if cost.get("status") == "final" and verification.get("normalized_match") is not True:
+            result.error(
+                "controls/cost-calculation.json verification.normalized_match "
+                "must be true for final status"
+            )
+        if cost.get("status") == "final" and verification.get("calculation_issues") != 0:
+            result.error(
+                "controls/cost-calculation.json verification.calculation_issues "
+                "must be 0 for final status"
+            )
+
+    limitations = receipt.get("limitations")
+    if not isinstance(limitations, dict) or limitations.get(
+        "provider_identifiers_persisted"
+    ) is not False:
+        result.error(
+            "controls/cost-calculation.json limitations."
+            "provider_identifiers_persisted must be false"
+        )
+
+    totals = receipt.get("totals")
+    exact = totals.get("exact_cost_usd") if isinstance(totals, dict) else None
+    if cost.get("status") == "final":
+        try:
+            exact_amount = Decimal(exact)
+            rounded = exact_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        except (InvalidOperation, TypeError, ValueError):
+            result.error(
+                "controls/cost-calculation.json totals.exact_cost_usd must be "
+                "a non-negative decimal string for final status"
+            )
+        else:
+            if not isinstance(exact, str) or not exact_amount.is_finite() or exact_amount < 0:
+                result.error(
+                    "controls/cost-calculation.json totals.exact_cost_usd must be "
+                    "a non-negative decimal string for final status"
+                )
+            elif rounded != Decimal(str(cost.get("totalUsd"))):
+                result.error(
+                    "controls/cost-calculation.json exact total does not round "
+                    "half up to manifest.json execution.costEstimate.totalUsd"
+                )
+    elif exact is not None:
+        result.error(
+            "controls/cost-calculation.json totals.exact_cost_usd must be null "
+            "for unreconciled status"
+        )
+
+
 def check_decision_family(
     root: Path,
     family: str,
@@ -850,6 +990,7 @@ def validate(
     root: Path,
     require_final: bool = False,
     require_operationalization: bool = False,
+    require_public: bool = False,
 ) -> Result:
     result = Result()
     if not root.is_dir():
@@ -867,6 +1008,10 @@ def validate(
     check_open_items(root, result)
     check_portable_paths(root, result)
     check_secrets(root, result)
+    if require_public:
+        check_publication_safety(root, result)
+        check_public_access_boundary(root, result)
+        check_public_cost_receipt(root, result)
     check_decision_family(root, "architecture", "ADR", "architecture", result)
     check_decision_family(root, "product", "PDR", "product-value", result)
     check_diagrams(root, result)
@@ -880,11 +1025,13 @@ def main() -> int:
     parser.add_argument("audit_directory", type=Path)
     parser.add_argument("--require-final", action="store_true")
     parser.add_argument("--require-operationalization", action="store_true")
+    parser.add_argument("--require-public", action="store_true")
     args = parser.parse_args()
     result = validate(
         args.audit_directory,
         args.require_final,
         args.require_operationalization,
+        args.require_public,
     )
     for message in result.errors:
         print(f"ERROR: {message}")

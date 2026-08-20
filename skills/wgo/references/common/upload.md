@@ -34,15 +34,20 @@ Before creating Git state, require all of the following:
    `completed-with-open-verification`, and the final audience reports exist.
 2. `manifest.json` is the final WGO schema, contains no legacy flat manifest
    fields or unresolved placeholders, and its entrypoint exists.
-3. `evidence.accessBoundary.level` is `public-only`. A private, mixed, or
-   unknown boundary is not publishable through this command.
+3. Read and display `evidence.accessBoundary.level`. When it is `public-only`,
+   continue normally. Any other declared or missing level is a publication
+   warning, not a blocking validation error: state that the audit may contain
+   mocked or real internal decisions, reconciliations, or other non-public
+   context, and require the auditor to explicitly acknowledge that boundary
+   before upload. Do not infer that the artifacts are safe merely from the
+   boundary label; all remaining content-safety checks still apply.
 4. `subject.id` matches `[a-z0-9][a-z0-9._-]*` and `evidence.cutoff` is an ISO
    date. The destination is exactly
    `audits/<subject.id>/<evidence.cutoff>/`.
 5. Every Git source uses its full resolved commit when known, and every
    selected reviewer records its ID, version, and status.
 6. The complete audit root passes the bundled structural validator with
-   `--require-final` when Python is available. If it is unavailable, inspect
+   `--require-final --require-public` when Python is available. If it is unavailable, inspect
    the same required files, headings, tables, manifest contract, stable IDs,
    and credential patterns directly; never describe an unrun validator as
    passed.
@@ -50,11 +55,16 @@ Before creating Git state, require all of the following:
    rule. Reject absolute local paths, drive or UNC paths, home-relative paths,
    file URLs, relative paths that normalize outside the audit root,
    credentials, agent session identifiers, symlinks, nested `.git`, `__MACOSX`,
-   `tmp`, converted-document caches, dependency clones, and build output.
-   Report exact offending files; do not rewrite or omit them during upload.
+   `tmp`, converted-document caches, dependency clones, and build output in
+   the public package. Report exact offending files; do not rewrite them during
+   upload.
 8. Discover every `.DS_Store` file below the audit root. Treat it as packaging
    metadata, not as an audit artifact: report its portable relative locator and
    exclude it from the published package without modifying the source audit.
+9. Require `controls/cost-estimate.md` and `controls/cost-calculation.json` to
+   use audit-local aliases and contain no provider session identifiers. Cost
+   manifests and independent pass files are temporary working data outside the
+   audit root and are not part of the publication package.
 
 Reports are immutable. Query the configured repository and refuse an existing
 destination even when its contents differ. Do not offer an overwrite.
@@ -102,7 +112,11 @@ Before any commit or push, show the auditor:
   `Add <subject.name> <evidence.cutoff> audit`.
 
 Ask for explicit approval of that public destination, commit label, and draft
-PR. A no or ambiguous answer ends the workflow without external writes.
+PR. When the access boundary is not `public-only`, the approval request must
+also quote the exact boundary level and separately ask the auditor to
+acknowledge publication despite the warning. The acknowledgement may be in the
+same response as the destination approval only when both approvals are
+explicit. A no or ambiguous answer ends the workflow without external writes.
 
 ## Package And Publish
 
@@ -131,7 +145,8 @@ body states:
 
 - what report was added and why;
 - report ID, subject, evidence cutoff, and destination;
-- public evidence boundary and important limitations;
+- declared evidence access boundary, its explicit publication acknowledgement
+  when broader than `public-only`, and important limitations;
 - exact validation command and result, or the explicit checks used when the
   optional validator could not run; and
 - confirmation that the manifest was verified unchanged, which Markdown files

@@ -49,8 +49,11 @@ its complete JSONL and its metadata file, plus the exact parent spawn and
 terminal line numbers. The parent marker's request belongs to the phase active
 before the marker; the marker changes attribution only for later requests.
 
-Write `<audit-root>/controls/cost-manifest-claude.json`, or
-`cost-manifest-claude-operationalized.json` for the refresh, before calculating.
+Write
+`<project-root>/tmp_debug/wgo-cost/<audit-id>/cost-manifest-claude.json`, or
+`cost-manifest-claude-operationalized.json` beside it for the refresh, before
+calculating. These files are temporary working data outside the audit root; the
+public cost control and receipt use audit-local aliases only.
 Do not rewrite a manifest to make two calculations agree. Include at least:
 
 Resolve Claude's application-data/session root as a transient runtime path.
@@ -476,17 +479,19 @@ rate card, and this prompt:
 You are a Claude cost-calculation worker. Use only the frozen manifest. Parse Claude assistant-message usage at request level, collapse progressive copies by stable request/message ID, and return the recipe's machine-checkable table. Do not discover sessions, count Agent tool-result aggregates, or guess missing cache splits, models, tiers, geography, or prices. Flag exact disputed records.
 ```
 
-Preserve results as `cost-claude-pass-a.json` and
+Preserve temporary results beside the manifest as `cost-claude-pass-a.json` and
 `cost-claude-pass-b.json` (or `*-operationalized-*`). Compare them exactly after
 normalizing row order. Any mismatch names the record set, request ID, line, and
 field and leaves the result `Unreconciled`.
 
 Read `../templates/cost-estimate-template.md` immediately before writing
-`controls/cost-estimate.md`. Link the manifest and both result files. Show token
+`controls/cost-estimate.md` and the alias-only
+`controls/cost-calculation.json` receipt. Do not link the temporary manifest or
+pass files. Show token
 totals by phase, record set/session, model, tier, and geography; show the two
 cache-write TTLs; show exact rate components and a total only when all included
 requests reconcile and are priced. Display money as `$X.XX` while preserving
-exact decimals in JSON evidence.
+exact decimals in the public receipt.
 
 Always state that this is an Anthropic-API-equivalent estimate, not Claude Code
 subscription or provider billing. Include transcript retention/access,

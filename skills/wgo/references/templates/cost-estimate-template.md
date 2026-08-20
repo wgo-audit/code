@@ -1,11 +1,17 @@
 # Cost Estimate Template
 
-Replace prompts in the completed control. Preserve exact costs in the frozen
-machine-readable evidence. In this Markdown control, display every priced
+Replace prompts in the completed control. Preserve exact costs in the public
+alias-only `controls/cost-calculation.json` receipt. In this Markdown control,
+display every priced
 monetary amount as `$X.XX`, rounded half up from its exact value. Round the
 exact total independently; never sum already-rounded display rows. Use
 `unpriced`, not `$0.00`, when a rate is unavailable. A priced amount below half
-a cent may display as `$0.00`; link its exact machine-readable value.
+a cent may display as `$0.00`; state its exact value in the public control.
+
+Use deterministic audit-local aliases for every provider session, turn, task,
+request, message, event, and source filename. Never expose a provider-native
+identifier in either public cost artifact. Keep temporary manifests and
+independent pass files under `tmp_debug/wgo-cost/<audit-id>/`, outside the audit.
 
 ```markdown
 # API-Equivalent Audit Cost Estimate
@@ -22,13 +28,14 @@ a cent may display as `$0.00`; link its exact machine-readable value.
 
 State the provider, dated source, exact formula or recorded-cost rule, and the
 service tier/context/geography where applicable. Display each priced component
-and calculated cost as `$X.XX`; preserve exact decimals in the linked
-calculation evidence.
+and calculated cost as `$X.XX`; preserve exact decimals in the public receipt.
 
 ## Frozen Manifest And Exclusions
 
-Link the applicable manifest and both independent verification results. For
-operationalized coverage, also link the preserved audit-only manifest.
+Link `cost-calculation.json`. It records exact aliased rows and totals,
+rate-card identity, temporary input digest, pass count, normalized-match result,
+and pass-result digests. For operationalized coverage, also link the preserved
+audit-only receipt.
 
 ### Phase Boundaries
 
@@ -87,9 +94,9 @@ After every calculation or refresh, update `manifest.json` at
 }
 ```
 
-Round manifest monetary values half up from the exact machine-readable result
+Round manifest monetary values half up from the exact receipt result
 to dollars and cents; never store fractions of a cent there. Keep exact values
-only in the frozen calculation evidence. Set `coverage` to `audit` or
+only in `controls/cost-calculation.json`. Set `coverage` to `audit` or
 `audit-and-operationalization`. For an `unreconciled` result, set `totalUsd` to
 `null`; when the control reports a subtotal for reconciled included evidence,
 add `reconciledSubtotalUsd`, rounded the same way. Never label that subtotal as

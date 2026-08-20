@@ -156,6 +156,7 @@ _whats-going-on-YYYYMMDD/
   controls/
     open-items.md
     cost-estimate.md
+    cost-calculation.json
     <selected reviewer-owned artifact directories>
   reviewer-reports/<reviewer-id>/
     report.md
